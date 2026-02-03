@@ -1,0 +1,527 @@
+<%#
+
+  功能说明:
+  -----------
+  本模态框支持登录和注册两种模式，通过 JavaScript 动态切换：
+
+  1. 登录模式:
+     - 提交到: POST /login
+     - 参数格式: session[email], session[password]
+     - 后端控制器: SessionsController
+
+  2. 注册模式:
+     - 提交到: POST /signup
+     - 参数格式: user[email], user[password], user[password_confirmation]
+     - 后端控制器: UsersController
+
+  交互特性:
+  -----------
+  - 小猫SVG动画: 根据输入框焦点变化（邮箱聚焦时看邮箱，密码聚焦时捂眼睛）
+  - 浮动标签: 输入框获得焦点时标签上浮
+  - 错误提示: 显示在表单顶部的红色提示框
+  - Turbo Stream支持: 登录/注册成功后无刷新更新导航栏
+
+%>
+
+<style>
+    /* app/assets/stylesheets/auth_modal.css */
+
+    /* 引入字体：与原设计保持一致 */
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Montserrat:wght@300;400;600&display=swap');
+
+    :root {
+        /* 设计系统变量 */
+        --auth-bg: #FDFBF7;           /* 米白色背景 */
+        --auth-accent: #DC4C3E;       /* Peter Cat 红 */
+        --auth-text-main: #292524;    /* 深灰 */
+        --auth-text-sub: #a8a29e;     /* 浅灰 */
+        --auth-border: #e7e5e4;       /* 边框色 */
+
+        --font-serif: "Cormorant Garamond", serif;
+        --font-sans: "Montserrat", sans-serif;
+    }
+
+    /* === 1. 遮罩层 (Backdrop) === */
+    .auth-backdrop {
+        position: fixed;
+        inset: 0; /* top:0, right:0, bottom:0, left:0 */
+        background-color: rgba(28, 25, 23, 0.2);
+        backdrop-filter: blur(2px);
+        z-index: 50;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+
+        /* 默认隐藏，通过JS添加 .is-open 显示 */
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s;
+    }
+
+    .auth-backdrop.is-open {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    /* === 2. 模态框卡片 (Card) === */
+    .auth-card {
+        background-color: var(--auth-bg);
+        width: 100%;
+        max-width: 380px;
+        border-radius: 16px;
+        border: 1px solid var(--auth-border);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        position: relative;
+
+        /* 进场动画 */
+        transform: scale(0.95);
+        transition: transform 0.3s ease-out;
+    }
+
+    .auth-backdrop.is-open .auth-card {
+        transform: scale(1);
+    }
+
+    /* 关闭按钮 */
+    .auth-close-btn {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: none;
+        border: none;
+        color: var(--auth-text-sub);
+        cursor: pointer;
+        z-index: 10;
+        transition: color 0.2s;
+    }
+    .auth-close-btn:hover {
+        color: var(--auth-text-main);
+    }
+
+    /* === 3. 小猫动画 (Cat SVG Animation) === */
+    .cat-wrapper {
+        height: 160px;
+        display: flex;
+        justify-content: center;
+        align-items: flex-end;
+        padding-top: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* SVG 基础属性 */
+    .cat-line {
+        fill: none;
+        stroke: var(--auth-accent);
+        stroke-width: 3;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+    .cat-eye {
+        fill: var(--auth-accent);
+    }
+
+    /* 动画部分 */
+    .cat-face-group {
+        transition: transform 0.3s ease-out;
+    }
+    .cat-eyes-group {
+        transition: transform 0.3s ease;
+    }
+    .cat-paws-group {
+        transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s;
+        transform-origin: center bottom;
+        opacity: 0;
+        transform: translateY(50px); /* 默认藏在下面 */
+    }
+
+    /* 状态 A: 看着邮箱 (JS添加 .cat-looking 到父容器) */
+    .cat-wrapper.cat-looking .cat-face-group {
+        transform: translateY(4px);
+    }
+    .cat-wrapper.cat-looking .cat-eyes-group {
+        transform: translate(-2px, 2px);
+    }
+
+    /* 状态 B: 捂住眼睛 (JS添加 .cat-covering 到父容器) */
+    .cat-wrapper.cat-covering .cat-paws-group {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    .cat-wrapper.cat-covering .cat-face-group {
+        transform: translateY(0); /* 脸部复位 */
+    }
+
+    /* === 4. 标题与 Logo === */
+    .auth-title {
+        text-align: center;
+        margin-bottom: 2rem;
+        margin-top: -0.5rem;
+    }
+    .auth-title span {
+        font-family: monospace;
+        font-size: 0.75rem;
+        color: var(--auth-accent);
+        letter-spacing: 0.1em;
+        text-transform: lowercase;
+    }
+
+    /* === 5. 表单与浮动标签 (Floating Labels) === */
+    .auth-form-body {
+        padding: 0 2rem 2rem 2rem;
+    }
+
+    .input-group {
+        position: relative;
+        margin-bottom: 1.25rem;
+    }
+
+    .input-field {
+        width: 100%;
+        background: transparent;
+        border: none;
+        border-bottom: 1px solid var(--auth-border);
+        padding: 0.5rem 0;
+        font-family: var(--font-serif);
+        font-size: 1rem;
+        color: var(--auth-text-main);
+        outline: none;
+        transition: border-color 0.2s;
+    }
+
+    /* 关键：必须设置 placeholder 为空但存在，用于 CSS 选择器定位 */
+    .input-field::placeholder {
+        color: transparent;
+    }
+
+    .input-field:focus {
+        border-color: var(--auth-accent);
+    }
+
+    .input-label {
+        position: absolute;
+        left: 0;
+        font-family: var(--font-sans);
+        pointer-events: none;
+        transition: all 0.2s ease;
+
+        /* 默认状态 (Active/Filled): 上浮，变小 */
+        top: -0.75rem;
+        font-size: 0.75rem;
+        color: var(--auth-text-sub);
+        letter-spacing: 0.05em;
+    }
+
+    .input-field:focus + .input-label {
+        color: var(--auth-accent);
+    }
+
+    /* 当输入框显示 placeholder (即为空) 且 未聚焦时：下沉，变大 */
+    .input-field:placeholder-shown:not(:focus) + .input-label {
+        top: 0.5rem;
+        font-size: 1rem;
+        color: var(--auth-text-sub);
+    }
+
+    /* === 6. 按钮与链接 === */
+    .auth-submit-btn {
+        width: 100%;
+        margin-top: 1.5rem;
+        background-color: var(--auth-accent);
+        color: white;
+        padding: 0.75rem;
+        border: none;
+        border-radius: 6px;
+        font-family: var(--font-sans);
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: background-color 0.2s, transform 0.1s;
+        box-shadow: 0 4px 6px rgba(220, 76, 62, 0.2);
+    }
+
+    .auth-submit-btn:hover {
+        background-color: #c93f32;
+    }
+    .auth-submit-btn:active {
+        transform: scale(0.98);
+    }
+
+    .auth-toggle-area {
+        margin-top: 1rem;
+        text-align: center;
+    }
+
+    .auth-toggle-link {
+        background: none;
+        border: none;
+        font-size: 0.75rem;
+        color: var(--auth-text-sub);
+        text-decoration: underline;
+        text-underline-offset: 4px;
+        text-decoration-color: var(--auth-border);
+        cursor: pointer;
+        font-family: var(--font-sans);
+        transition: color 0.2s;
+    }
+    .auth-toggle-link:hover {
+        color: var(--auth-accent);
+    }
+
+    /* 错误消息 */
+    .auth-error {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+
+    .auth-error span {
+        color: #DC4C3E;
+        font-size: 0.875rem;
+        font-family: var(--font-sans);
+    }
+
+    /* 首页触发按钮 (Join) */
+    .nav-join-btn {
+        position: fixed;
+        top: 7.5rem;
+        left: 1.5rem;
+        font-family: var(--font-sans);
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--auth-text-sub);
+        background: none;
+        border: none;
+        cursor: pointer;
+        z-index: 40;
+        transition: color 0.2s;
+    }
+    .nav-join-btn:hover {
+        color: var(--auth-accent);
+    }
+
+</style>
+
+
+<%# app/views/shared/_auth_modal.html.erb %>
+<%# 这个文件可以作为独立登录页面使用 %>
+
+<%# 返回首页按钮 %>
+<!--<a href="/" class="back-to-home-button" aria-label="返回首页">-->
+<!--  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="20" height="20">-->
+<!--    <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />-->
+<!--  </svg>-->
+<!--  返-->
+<!--</a>-->
+
+<%# 登录页面容器 %>
+<!--<div class="login-page" data-controller="auth-modal">-->
+<!--  <div class="login-page-container">-->
+    <%# 登录卡片 %>
+<!--    <div class="auth-card">-->
+
+      <%# 注意：独立页面模式下不需要关闭按钮，因为已经有返回首页按钮 %>
+
+      <%# Cat Animation Header %>
+<!--      <div class="cat-wrapper" data-auth-modal-target="catWrapper">-->
+<!--        <svg width="160" height="120" viewBox="0 0 160 120" style="transform: translateY(8px);">-->
+          <%# Body %>
+<!--          <path d="M35,120 C35,100 30,50 50,35 C60,28 70,25 80,25 C90,25 100,28 110,35 C130,50 125,100 125,120" class="cat-line" />-->
+<!--          <path d="M54,36 L45,10 L75,28" class="cat-line" />-->
+<!--          <path d="M106,36 L115,10 L85,28" class="cat-line" />-->
+<!--          <path d="M125,100 C145,100 150,80 145,60 C140,40 125,50 120,60" class="cat-line" opacity="0.8" />-->
+
+          <%# Face Group (Animates) %>
+<!--          <g class="cat-face-group">-->
+<!--            <g class="cat-eyes-group">-->
+<!--              <circle cx="65" cy="55" r="3" class="cat-eye" />-->
+<!--              <circle cx="95" cy="55" r="3" class="cat-eye" />-->
+<!--            </g>-->
+<!--            <path d="M80,65 L75,70 L85,70 Z" class="cat-eye" transform="scale(0.8) translate(16, 18)" />-->
+<!--            <path d="M80,72 L80,78" class="cat-line" stroke-width="2" />-->
+<!--          </g>-->
+
+          <%# Paws Group (Animates) %>
+<!--          <g class="cat-paws-group">-->
+<!--            <path d="M45,120 C45,90 55,50 65,55 C70,58 65,80 65,120" class="cat-line" fill="#FDFBF7" />-->
+<!--            <path d="M115,120 C115,90 105,50 95,55 C90,58 95,80 95,120" class="cat-line" fill="#FDFBF7" />-->
+<!--          </g>-->
+<!--        </svg>-->
+<!--      </div>-->
+
+      <%# Title %>
+<!--      <div class="auth-title">-->
+<!--        <span data-auth-modal-target="titleText">peter-cat</span>-->
+<!--      </div>-->
+
+      <%# Form Section %>
+<!--      <div class="auth-form-body">-->
+<!--        <form>-->
+          <%# Email %>
+<!--          <div class="input-group">-->
+<!--            <input type="email" id="auth_email" class="input-field" placeholder="Email" required-->
+<!--                   data-action="focus->auth-modal#focusEmail blur->auth-modal#blurInput">-->
+<!--            <label for="auth_email" class="input-label">Email Address</label>-->
+<!--          </div>-->
+
+          <%# Password %>
+<!--          <div class="input-group">-->
+<!--            <input type="password" id="auth_password" class="input-field" placeholder="Password" required-->
+<!--                   data-action="focus->auth-modal#focusPassword blur->auth-modal#blurInput">-->
+<!--            <label for="auth_password" class="input-label">Password</label>-->
+<!--          </div>-->
+
+          <%# Submit Button %>
+<!--          <button type="submit" class="auth-submit-btn" data-auth-modal-target="submitBtn">-->
+<!--            Enter-->
+<!--          </button>-->
+<!--        </form>-->
+
+        <%# Toggle Mode %>
+<!--        <div class="auth-toggle-area">-->
+<!--          <button type="button" class="auth-toggle-link"-->
+<!--                  data-action="click->auth-modal#toggleMode"-->
+<!--                  data-auth-modal-target="toggleBtn">-->
+<!--            Not a member? Join-->
+<!--          </button>-->
+<!--        </div>-->
+<!--      </div>-->
+
+<!--    </div>-->
+<!--  </div>-->
+<!--</div>-->
+
+<%# 注意：模态框相关的元素（backdrop、Join按钮）在独立页面模式下不使用，但保留在代码中以便将来复用 %>
+
+
+
+<%# ==========================================================================
+     文件名: _auth_modal.html.erb
+     位置: app/views/shared/_auth_modal.html.erb
+     用途: 登录/注册模态框模板（ERB + Stimulus + SVG）
+     ========================================================================== %>
+
+<%# ==========================================================================
+     Stimulus 控制器绑定
+     data-controller="auth-modal" 应该在父元素上定义
+     控制器文件: app/javascript/controllers/auth_modal_controller.js
+     ========================================================================== %>
+<%# app/views/shared/_auth_modal.html.erb %>
+
+<%# app/views/shared/_auth_modal.html.erb %>
+<%# 注意：此partial需要在 data-controller="auth-modal" 的父元素内使用 %>
+
+<%# 1. Modal Backdrop %>
+  <div class="auth-backdrop" data-auth-modal-target="backdrop">
+
+    <%# Click overlay to close %>
+    <div style="position:absolute; inset:0;" data-action="click->auth-modal#close"></div>
+
+    <%# 3. Modal Card %>
+    <div class="auth-card">
+
+      <%# Close Icon %>
+      <button type="button" class="auth-close-btn" data-action="click->auth-modal#close">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="20" height="20">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+        </svg>
+      </button>
+
+      <%# Cat Animation Header %>
+      <div class="cat-wrapper" data-auth-modal-target="catWrapper">
+        <svg width="160" height="120" viewBox="0 0 160 120" style="transform: translateY(8px);">
+          <%# Body %>
+          <path d="M35,120 C35,100 30,50 50,35 C60,28 70,25 80,25 C90,25 100,28 110,35 C130,50 125,100 125,120" class="cat-line" />
+          <path d="M54,36 L45,10 L75,28" class="cat-line" />
+          <path d="M106,36 L115,10 L85,28" class="cat-line" />
+          <path d="M125,100 C145,100 150,80 145,60 C140,40 125,50 120,60" class="cat-line" opacity="0.8" />
+
+          <%# Face Group (Animates) %>
+          <g class="cat-face-group">
+            <g class="cat-eyes-group">
+              <circle cx="65" cy="55" r="3" class="cat-eye" />
+              <circle cx="95" cy="55" r="3" class="cat-eye" />
+            </g>
+            <path d="M80,65 L75,70 L85,70 Z" class="cat-eye" transform="scale(0.8) translate(16, 18)" />
+            <path d="M80,72 L80,78" class="cat-line" stroke-width="2" />
+          </g>
+
+          <%# Paws Group (Animates) %>
+          <g class="cat-paws-group">
+            <path d="M45,120 C45,90 55,50 65,55 C70,58 65,80 65,120" class="cat-line" fill="#FDFBF7" />
+            <path d="M115,120 C115,90 105,50 95,55 C90,58 95,80 95,120" class="cat-line" fill="#FDFBF7" />
+          </g>
+        </svg>
+      </div>
+
+      <%# Title %>
+      <div class="auth-title">
+        <span data-auth-modal-target="titleText">peter-cat</span>
+      </div>
+
+      <%# Form Section %>
+      <div class="auth-form-body">
+        <%# 登录/注册表单 - 根据模式动态切换提交目标 %>
+        <%= form_with url: login_path, method: :post, class: "auth-form",
+              data: { turbo: false, action: "submit->auth-modal#submitForm", auth_modal_target: "form" } do |f| %>
+
+          <%# 错误消息显示区域 %>
+          <div class="auth-error" data-auth-modal-target="errorMessage" style="display: none;">
+            <span data-auth-modal-target="errorText"></span>
+          </div>
+
+          <%# Email %>
+          <div class="input-group">
+            <%# 使用 name 属性动态切换参数格式：session[email] (登录) 或 user[email] (注册) %>
+            <%= f.email_field :email, class: "input-field", placeholder: "Email", required: true,
+                  name: "session[email]",
+                  data: { action: "focus->auth-modal#focusEmail blur->auth-modal#blurInput", auth_modal_target: "emailField" } %>
+            <%= f.label :email, "Email Address", class: "input-label" %>
+          </div>
+
+          <%# Password %>
+          <div class="input-group">
+            <%# 使用 name 属性动态切换参数格式：session[password] (登录) 或 user[password] (注册) %>
+            <%= f.password_field :password, class: "input-field", placeholder: "Password", required: true,
+                  name: "session[password]",
+                  data: { action: "focus->auth-modal#focusPassword blur->auth-modal#blurInput", auth_modal_target: "passwordField" } %>
+            <%= f.label :password, "Password", class: "input-label" %>
+          </div>
+
+          <%# Password Confirmation - 仅在注册模式下显示 %>
+          <div class="input-group" data-auth-modal-target="passwordConfirmGroup" style="display: none;">
+            <%# 注册模式下参数格式为 user[password_confirmation] %>
+            <%= f.password_field :password_confirmation, class: "input-field", placeholder: "Confirm Password",
+                  name: "user[password_confirmation]",
+                  data: { action: "focus->auth-modal#focusPassword blur->auth-modal#blurInput", auth_modal_target: "passwordConfirmField" } %>
+            <%= f.label :password_confirmation, "Confirm Password", class: "input-label" %>
+          </div>
+
+          <%# Remember Me - 默认记住用户30天 %>
+          <%= f.hidden_field :remember_me, value: "1", name: "session[remember_me]" %>
+
+          <%# Submit Button %>
+          <%= f.submit "Enter", class: "auth-submit-btn", data: { auth_modal_target: "submitBtn" } %>
+        <% end %>
+
+        <%# Toggle Mode %>
+        <button type="button" class="auth-toggle-link"
+                data-action="click->auth-modal#toggleMode"
+                data-auth-modal-target="toggleBtn">
+          Not a member? Join
+        </button>
+      </div>
+
+    </div>
+  </div>
+

@@ -1,0 +1,162 @@
+<%# ============================================
+   极简登录页面 - 从播放页面跳转
+   登录成功后返回播放页面，不打断音频
+   ============================================ %>
+
+<div class="simple-login-page">
+  <%# 关闭/返回按钮 - 返回播放页面 %>
+  <%= link_to player_path, class: "close-login-btn", data: { turbo_action: "restore" } do %>
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" width="24" height="24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+    </svg>
+  <% end %>
+
+  <%# 登录表单 %>
+  <div class="simple-login-form">
+    <h1 class="simple-login-title">登录</h1>
+
+    <%= form_with url: login_path, scope: :session,
+          data: { turbo: false, controller: "simple-login", action: "submit->simple-login#submit" } do |f| %>
+
+      <%# 错误提示 %>
+      <div class="simple-error" data-simple-login-target="error" style="display: none;"></div>
+
+      <%# 邮箱 %>
+      <%= f.email_field :email,
+            placeholder: "邮箱地址",
+            required: true,
+            class: "simple-input",
+            autofocus: true %>
+
+      <%# 密码 %>
+      <%= f.password_field :password,
+            placeholder: "密码",
+            required: true,
+            class: "simple-input" %>
+
+      <%# 提交按钮 %>
+      <%= f.submit "进入", class: "simple-submit-btn" %>
+    <% end %>
+
+    <%# 注册链接 %>
+    <p class="simple-signup-link">
+      还没有账号？<%= link_to "立即注册", signup_path, data: { turbo: true } %>
+    </p>
+  </div>
+</div>
+
+<%# 页面样式 %>
+<style>
+  /* 极简登录页 */
+  .simple-login-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #1a1a2e;
+    padding: 2rem;
+  }
+
+  /* 关闭按钮 */
+  .close-login-btn {
+    position: fixed;
+    top: 1.5rem;
+    right: 1.5rem;
+    color: rgba(255, 255, 255, 0.6);
+    text-decoration: none;
+    transition: color 0.2s;
+    z-index: 100;
+  }
+
+  .close-login-btn:hover {
+    color: white;
+  }
+
+  /* 登录表单容器 */
+  .simple-login-form {
+    width: 100%;
+    max-width: 320px;
+  }
+
+  .simple-login-title {
+    color: white;
+    font-size: 1.75rem;
+    font-weight: 300;
+    text-align: center;
+    margin-bottom: 2rem;
+    letter-spacing: 0.1em;
+  }
+
+  /* 输入框 */
+  .simple-input {
+    width: 100%;
+    padding: 1rem 0;
+    margin-bottom: 1rem;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .simple-input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+  }
+
+  .simple-input:focus {
+    border-color: #667eea;
+  }
+
+  /* 提交按钮 */
+  .simple-submit-btn {
+    width: 100%;
+    padding: 1rem;
+    margin-top: 1.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+  }
+
+  .simple-submit-btn:hover {
+    opacity: 0.9;
+  }
+
+  .simple-submit-btn:active {
+    transform: scale(0.98);
+  }
+
+  /* 注册链接 */
+  .simple-signup-link {
+    text-align: center;
+    margin-top: 1.5rem;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.875rem;
+  }
+
+  .simple-signup-link a {
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .simple-signup-link a:hover {
+    text-decoration: underline;
+  }
+
+  /* 错误提示 */
+  .simple-error {
+    background: rgba(220, 76, 62, 0.2);
+    border: 1px solid rgba(220, 76, 62, 0.4);
+    color: #ff6b6b;
+    padding: 0.75rem;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+    text-align: center;
+  }
+</style>

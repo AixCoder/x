@@ -1,0 +1,388 @@
+<%# ============================================
+   首页视图 - 日本文学名言展示页面
+   ============================================
+%>
+
+<%# ============================================
+   Flash 消息显示（登录成功/登出成功提示）
+   ============================================ %>
+<div id="flash-container">
+  <% if flash[:notice] %>
+    <div class="flash-message flash-notice">
+      <%= flash[:notice] %>
+    </div>
+  <% end %>
+</div>
+
+<%# ============================================
+   导航栏 - 根据登录状态显示不同内容
+   ============================================
+   - 未登录：显示登录和注册按钮
+   - 已登录：显示用户邮箱和登出按钮
+%>
+<div data-controller="auth-modal">
+  <%= render "shared/nav_bar" %>
+
+<%# 外层容器：用于控制整个页面的最大宽度和居中布局 %>
+<div class="container">
+
+  <%# 名言卡片 %>
+  <div class="quote-card"
+       data-controller="favorite"
+       data-favorite-quote-value="<%= @quote %>"
+       data-quote-id="<%= @quote_id %>">
+
+    <%# 红心按钮 %>
+    <button
+      type="button"
+      class="heart-button"
+      data-favorite-target="button"
+      data-action="click->favorite#toggle"
+      aria-label="收藏这条名言">
+      <span class="heart-icon">🤍</span>
+    </button>
+
+    <h1 class="quote-text">
+      <%= @quote %>
+    </h1>
+
+    <p class="quote-subtitle">日本文学名言</p>
+
+  </div>
+
+
+
+</div>
+
+<%# 触发按钮（固定在左上角）%>
+  <button type="button" class="nav-join-btn" data-action="click->auth-modal#open">
+    Join
+  </button>
+
+  <%# 登录模态框 %>
+  <%= render "shared/auth_modal" %>
+</div>
+
+<%# 前往播放页面按钮 %>
+<%= link_to player_path, class: "go-to-player-btn", data: { turbo: true } do %>
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="20" height="20">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
+  </svg>
+  前往播放页面
+<% end %>
+
+<%# 底部更多菜单 %>
+<div data-controller="bottom-menu">
+  <%# 更多按钮（右下角） %>
+  <button type="button" class="more-btn" data-action="click->bottom-menu#open">
+    ...
+  </button>
+
+  <%# 底部弹出菜单 %>
+  <div class="bottom-menu-backdrop" data-bottom-menu-target="backdrop" data-action="click->bottom-menu#close">
+    <div class="bottom-menu-container" data-bottom-menu-target="menu">
+      <div class="bottom-menu-handle"></div>
+      <nav class="bottom-menu-nav">
+        <button type="button" class="bottom-menu-item share-btn" data-action="click->bottom-menu#share">
+          <span class="bottom-menu-icon">📤</span>
+          <span class="bottom-menu-text">分享</span>
+        </button>
+        <%= link_to about_path, class: "bottom-menu-item", data: { action: "click->bottom-menu#itemClick" } do %>
+          <span class="bottom-menu-icon">ℹ️</span>
+          <span class="bottom-menu-text">about</span>
+        <% end %>
+        <%= link_to favorites_path, class: "bottom-menu-item", data: { action: "click->bottom-menu#itemClick" } do %>
+          <span class="bottom-menu-icon">❤️</span>
+          <span class="bottom-menu-text">红心列表</span>
+        <% end %>
+      </nav>
+    </div>
+  </div>
+</div>
+
+<%# ============================================
+   导航栏和 Flash 消息样式
+   ============================================ %>
+<style>
+  <%# Flash 消息 %>
+  .flash-message {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    text-align: center;
+    z-index: 1000;
+    animation: fadeInDown 0.3s ease;
+  }
+
+  @keyframes fadeInDown {
+    from {
+      opacity: 0;
+      transform: translateX(-50%) translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  }
+
+  .flash-notice {
+    background-color: #dcfce7;
+    color: #16a34a;
+    border: 1px solid #bbf7d0;
+  }
+
+  <%# 导航栏 %>
+  .nav-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    z-index: 100;
+    background: linear-gradient(to bottom, rgba(255,255,255,0.9), transparent);
+  }
+
+  .auth-links,
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .user-profile-link {
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+  }
+
+  .user-profile-link:hover {
+    background: #f3f4f6;
+  }
+
+  .user-nickname {
+    font-size: 0.875rem;
+    color: #4b5563;
+    font-weight: 500;
+  }
+
+  .user-email {
+    font-size: 0.875rem;
+    color: #4b5563;
+    font-weight: 500;
+  }
+
+  .nav-button {
+    padding: 0.5rem 1.25rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    font-family: inherit;
+  }
+
+  .login-button {
+    background: white;
+    color: #374151;
+    border: 1px solid #d1d5db;
+  }
+
+  .login-button:hover {
+    background: #f9fafb;
+    border-color: #9ca3af;
+  }
+
+  .signup-button {
+    background: #DC4C3E;
+    color: white;
+  }
+
+  .signup-button:hover {
+    background: #c93f32;
+  }
+
+  .logout-button {
+    background: transparent;
+    color: #6b7280;
+    border: 1px solid #e5e7eb;
+  }
+
+  .logout-button:hover {
+    background: #f3f4f6;
+    color: #374151;
+  }
+
+  <%# 更多按钮（右下角） %>
+  .more-btn {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: white;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    font-size: 1.25rem;
+    color: #6b7280;
+    cursor: pointer;
+    z-index: 40;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .more-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+    color: #DC4C3E;
+  }
+
+  .more-btn:active {
+    transform: scale(0.95);
+  }
+
+  <%# 底部菜单遮罩层 %>
+  .bottom-menu-backdrop {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s;
+  }
+
+  .bottom-menu-backdrop.is-open {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  <%# 底部菜单容器 %>
+  .bottom-menu-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-radius: 24px 24px 0 0;
+    padding: 1rem 0 2rem;
+    transform: translateY(100%);
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 101;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  .bottom-menu-backdrop.is-open .bottom-menu-container {
+    transform: translateY(0);
+  }
+
+  <%# 拖动手柄 %>
+  .bottom-menu-handle {
+    width: 40px;
+    height: 4px;
+    background: #e5e7eb;
+    border-radius: 2px;
+    margin: 0 auto 1.5rem;
+  }
+
+  <%# 菜单导航 %>
+  .bottom-menu-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0 1.5rem;
+  }
+
+  <%# 菜单项 %>
+  .bottom-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    border-radius: 12px;
+    text-decoration: none;
+    color: #374151;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    font-weight: 500;
+  }
+
+  .bottom-menu-item:hover {
+    background: #f9fafb;
+    color: #DC4C3E;
+    transform: translateX(4px);
+  }
+
+  .bottom-menu-item:active {
+    background: #f3f4f6;
+    transform: translateX(4px) scale(0.98);
+  }
+
+  .bottom-menu-item.share-btn {
+    background: none;
+    border: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .bottom-menu-icon {
+    font-size: 1.25rem;
+    width: 32px;
+    text-align: center;
+  }
+
+  .bottom-menu-text {
+    font-family: var(--font-sans, "Montserrat", sans-serif);
+  }
+
+  <%# 前往播放页面按钮 %>
+  .go-to-player-btn {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #DC4C3E 0%, #ff6b6b 100%);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none;
+    z-index: 40;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(220, 76, 62, 0.3);
+  }
+
+  .go-to-player-btn:hover {
+    transform: translateX(-50%) scale(1.05);
+    box-shadow: 0 6px 20px rgba(220, 76, 62, 0.4);
+  }
+
+  .go-to-player-btn:active {
+    transform: translateX(-50%) scale(0.95);
+  }
+
+  .go-to-player-btn svg {
+    flex-shrink: 0;
+  }
+</style>

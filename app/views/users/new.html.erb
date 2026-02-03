@@ -1,0 +1,106 @@
+<%# ============================================
+   注册页面 - Users#new
+   ============================================
+   表单提交到 POST /signup
+%>
+
+<%# 注册页面容器 %>
+<div class="login-page">
+  <%# 返回首页按钮 %>
+  <%= link_to root_path, class: "back-to-home-button", aria: { label: "返回首页" } do %>
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="20" height="20">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+    </svg>
+    返回首页
+  <% end %>
+
+  <div class="login-page-container">
+    <%# 注册卡片 %>
+    <div class="auth-card">
+
+      <%# Title %>
+      <div class="auth-title" style="margin-top: 2rem;">
+        <span>注册新账号</span>
+      </div>
+
+      <%# Flash 消息显示 %>
+      <% if flash[:alert] %>
+        <div class="flash-message flash-alert">
+          <%= flash[:alert] %>
+        </div>
+      <% end %>
+
+      <%# Form Section %>
+      <div class="auth-form-body">
+        <%# ============================================
+           注册表单
+           ============================================
+           - model: @user（User 模型实例）
+           - url: signup_path (POST /signup)
+           - 包含邮箱、密码、确认密码三个字段
+        %>
+        <%= form_with model: @user, url: signup_path, data: { turbo: false }, class: "signup-form" do |f| %>
+          <%# Email 输入框 %>
+          <div class="input-group">
+            <%= f.email_field :email,
+                class: "input-field",
+                placeholder: "Email",
+                required: true %>
+            <%= f.label :email, "邮箱地址", class: "input-label" %>
+          </div>
+
+          <%# Password 输入框 %>
+          <div class="input-group">
+            <%= f.password_field :password,
+                class: "input-field",
+                placeholder: "Password",
+                required: true,
+                minlength: 6 %>
+            <%= f.label :password, "密码（至少6位）", class: "input-label" %>
+          </div>
+
+          <%# Password Confirmation 输入框 %>
+          <div class="input-group">
+            <%= f.password_field :password_confirmation,
+                class: "input-field",
+                placeholder: "Confirm Password",
+                required: true %>
+            <%= f.label :password_confirmation, "确认密码", class: "input-label" %>
+          </div>
+
+          <%# 提交按钮 %>
+          <%= f.submit "注册", class: "auth-submit-btn" %>
+        <% end %>
+
+        <%# 切换模式：已有账号？去登录 %>
+        <div class="auth-toggle-area">
+          <%= link_to "已有账号？立即登录", login_path, class: "auth-toggle-link" %>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<%# Flash 消息样式 %>
+<style>
+  .flash-message {
+    padding: 0.75rem 1rem;
+    margin: 0 2rem 1rem;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    text-align: center;
+  }
+
+  .flash-alert {
+    background-color: #fee2e2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+  }
+
+  .flash-notice {
+    background-color: #dbeafe;
+    color: #2563eb;
+    border: 1px solid #bfdbfe;
+  }
+</style>

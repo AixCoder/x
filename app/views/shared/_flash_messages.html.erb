@@ -1,0 +1,15 @@
+<%# Flash 消息容器 - 用于 Turbo Stream 局部更新 %>
+<%# 这个partial用于在用户注册/登录成功后更新页面顶部的flash消息区域 %>
+<div id="flash-container">
+  <% if flash[:notice] %>
+    <div class="flash-message flash-notice" data-controller="flash">
+      <%= flash[:notice] %>
+    </div>
+  <% end %>
+
+  <% if flash[:alert] %>
+    <div class="flash-message flash-alert" data-controller="flash">
+      <%= flash[:alert] %>
+    </div>
+  <% end %>
+</div>

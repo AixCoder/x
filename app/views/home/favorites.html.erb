@@ -1,0 +1,145 @@
+<%# 红心列表页面 %>
+<div class="favorites-container" data-controller="favorites-list">
+  <%= link_to "← 返回", root_path, class: "back-link", data: { turbo_action: "restore" } %>
+
+  <h1 class="favorites-title">红心列表 ❤️</h1>
+
+  <div class="favorites-content">
+    <% if logged_in? %>
+      <div id="favorites-list">
+        <%# 收藏列表将由 JavaScript 动态加载 %>
+        <p class="loading-state">加载中...</p>
+      </div>
+    <% else %>
+      <div class="login-prompt">
+        <p>请先登录查看收藏的名言</p>
+        <%= link_to "去登录", root_path, class: "login-link" %>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<style>
+  .favorites-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 2rem;
+    font-family: var(--font-sans, "Montserrat", sans-serif);
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 2rem;
+    color: #6b7280;
+    text-decoration: none;
+    font-size: 0.875rem;
+    transition: color 0.2s;
+  }
+
+  .back-link:hover {
+    color: #DC4C3E;
+  }
+
+  .favorites-title {
+    font-size: 1.75rem;
+    color: #292524;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+  }
+
+  .favorites-content {
+    color: #4b5563;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #9ca3af;
+    font-style: italic;
+  }
+
+  .login-prompt {
+    text-align: center;
+    padding: 3rem 1rem;
+  }
+
+  .login-prompt p {
+    margin-bottom: 1rem;
+    color: #6b7280;
+  }
+
+  .login-link {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    background: #DC4C3E;
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: background 0.2s;
+  }
+
+  .login-link:hover {
+    background: #c93f32;
+  }
+
+  .loading-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #9ca3af;
+  }
+
+  .favorite-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.25rem;
+    margin-bottom: 0.75rem;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #f3f4f6;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+
+  .favorite-quote {
+    margin: 0;
+    color: #374151;
+    font-size: 1rem;
+    line-height: 1.6;
+    flex: 1;
+  }
+
+  .remove-btn {
+    margin-left: 1rem;
+    padding: 0.5rem 1rem;
+    background: transparent;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    color: #6b7280;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .remove-btn:hover {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #DC4C3E;
+  }
+
+  .browse-link {
+    display: inline-block;
+    margin-top: 1rem;
+    padding: 0.75rem 1.5rem;
+    background: #DC4C3E;
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: background 0.2s;
+  }
+
+  .browse-link:hover {
+    background: #c93f32;
+  }
+</style>

@@ -1,0 +1,336 @@
+*= require_tree .
+*= require_self
+
+/* ============================================
+   以下是我们的自定义样式
+   从这里开始添加你的样式代码
+   ============================================ */
+
+/* ============================================
+   全局重置样式（Universal Reset）
+   ============================================
+   这个选择器 * 表示"所有元素"
+   重置所有元素的默认边距和内边距，确保跨浏览器的一致性 */
+* {
+    margin: 0;        /* 清除所有元素的外边距 */
+    padding: 0;       /* 清除所有元素的内边距 */
+    box-sizing: border-box;  /* 设置盒模型：宽度包含 padding 和 border */
+}
+
+/* ============================================
+   页面主体样式（Body Styles）
+   ============================================
+   这是整个页面的基础样式，设置字体、背景和布局 */
+body {
+    /* 字体族：使用系统字体栈，优先使用日文字体，确保日文显示美观
+       如果系统没有这些字体，会回退到 sans-serif（无衬线字体） */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", 
+                 "Hiragino Sans", "Hiragino Kaku Gothic ProN", 
+                 "Noto Sans JP", sans-serif;
+    
+    /* 背景渐变：从左上到右下的渐变效果
+       135deg 表示渐变角度（135度，从左上到右下）
+       #f5f7fa 是浅灰蓝色（起始色）
+       #c3cfe2 是浅蓝色（结束色）
+       创建柔和的天空色调背景 */
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    
+    /* 最小高度：100vh 表示视口高度的 100%
+       确保页面至少占满整个屏幕高度 */
+    min-height: 100vh;
+    
+    /* Flexbox 布局：使用弹性盒子布局
+       display: flex 启用弹性布局 */
+    display: flex;
+    
+    /* 垂直居中：align-items 控制交叉轴（垂直方向）的对齐方式
+       center 表示居中对齐 */
+    align-items: center;
+    
+    /* 水平居中：justify-content 控制主轴（水平方向）的对齐方式
+       center 表示居中对齐 */
+    justify-content: center;
+    
+    /* 内边距：给页面四周留出 20px 的空间
+       防止内容紧贴屏幕边缘 */
+    padding: 20px;
+}
+
+/* ============================================
+   容器样式（Container）
+   ============================================
+   这是内容的外层容器，控制内容的宽度 */
+.container {
+    width: 100%;           /* 宽度占满父元素的 100% */
+    max-width: 800px;      /* 最大宽度限制为 800px，在大屏幕上不会过宽
+                              保持阅读体验的舒适性 */
+    
+    /* 确保首页内容在模态框下方 */
+    position: relative;
+    z-index: 1;
+}
+
+/* ============================================
+   名言卡片样式（Quote Card）
+   ============================================
+   这是显示名言的主要卡片容器，具有优雅的视觉效果 */
+.quote-card {
+    /* 背景色：rgba(255, 255, 255, 0.95) 表示白色，透明度 95%
+       0.95 的透明度让背景渐变可以微微透出，增加层次感 */
+    background: rgba(255, 255, 255, 0.95);
+    
+    /* 圆角：20px 的圆角让卡片看起来更柔和、现代
+       符合日式美学的简洁风格 */
+    border-radius: 20px;
+    
+    /* 内边距：上下 60px，左右 40px
+       给内容留出充足的呼吸空间，符合简洁设计原则 */
+    padding: 60px 40px;
+    
+    /* 阴影：box-shadow 创建柔和的阴影效果
+       0 20px 60px 表示：
+       - 水平偏移：0（无水平偏移）
+       - 垂直偏移：20px（阴影向下 20px）
+       - 模糊半径：60px（阴影模糊 60px，看起来很柔和）
+       - 颜色：rgba(0, 0, 0, 0.1) 表示黑色，10% 透明度
+       这个阴影让卡片有"浮起来"的感觉 */
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+    
+    /* 文本对齐：居中对齐，让名言在卡片中居中显示 */
+    text-align: center;
+    
+    /* 背景模糊：backdrop-filter 创建毛玻璃效果
+       blur(10px) 让背景有 10px 的模糊效果
+       增强卡片的层次感和现代感 */
+    backdrop-filter: blur(10px);
+    
+    /* 确保卡片在模态框下方 */
+    position: relative;
+    z-index: 1;
+    
+    /* 过渡效果：transition 定义属性变化时的动画效果
+       transform 和 box-shadow 的变化会在 0.3 秒内平滑过渡
+       ease 表示缓动函数，开始和结束较慢，中间较快 */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* ============================================
+   名言卡片悬停效果（Hover Effect）
+   ============================================
+   当鼠标悬停在卡片上时触发的交互效果
+   增加页面的互动性和趣味性 */
+.quote-card:hover {
+    /* 向上移动：translateY(-5px) 将元素向上移动 5px
+       创建"卡片被抬起"的视觉效果 */
+    transform: translateY(-5px);
+    
+    /* 增强阴影：悬停时阴影更深、更大
+       让"抬起"的效果更明显 */
+    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.15);
+}
+
+/* ============================================
+   名言文本样式（Quote Text）
+   ============================================
+   这是名言的主要文本样式，需要突出显示 */
+.quote-text {
+    /* 字体大小：2.5rem 表示相对于根元素字体大小的 2.5 倍
+       通常 1rem = 16px，所以 2.5rem ≈ 40px
+       足够大，能够吸引注意力 */
+    font-size: 2.5rem;
+    
+    /* 字体粗细：300 是较细的字体（正常是 400，粗体是 700）
+       细字体看起来更优雅、轻盈，符合日式美学 */
+    font-weight: 300;
+    
+    /* 文字颜色：#2c3e50 是深灰蓝色
+       与浅色背景形成良好对比，确保可读性 */
+    color: #2c3e50;
+    
+    /* 行高：1.6 表示行高是字体大小的 1.6 倍
+       增加行间距，让长文本更易读 */
+    line-height: 1.6;
+    
+    /* 下边距：20px 的底部间距
+       与副标题之间保持适当的距离 */
+    margin-bottom: 20px;
+    
+    /* 字母间距：0.05em 增加字符之间的间距
+       让文字看起来更舒展、优雅
+       em 是相对于字体大小的单位 */
+    letter-spacing: 0.05em;
+}
+
+/* ============================================
+   副标题样式（Quote Subtitle）
+   ============================================
+   这是"日本文学名言"这个说明文字的样式 */
+.quote-subtitle {
+    /* 字体大小：1rem 表示正常大小（约 16px）
+       比主标题小，形成视觉层次 */
+    font-size: 1rem;
+    
+    /* 文字颜色：#7f8c8d 是中灰色
+       比主文本颜色浅，作为次要信息显示 */
+    color: #7f8c8d;
+    
+    /* 字体粗细：400 是正常粗细 */
+    font-weight: 400;
+    
+    /* 字母间距：0.1em 增加字符间距
+       让副标题看起来更精致 */
+    letter-spacing: 0.1em;
+    
+    /* 文本转换：uppercase 将所有字母转换为大写
+       让副标题更突出，形成设计感 */
+    text-transform: uppercase;
+}
+
+/* ============================================
+   红心按钮容器样式（Heart Button）
+   ============================================
+   这是收藏按钮的外层容器样式 */
+.heart-button {
+    /* 重置按钮默认样式 */
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    
+    /* 定位：绝对定位，放在卡片右上角 */
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    
+    /* 尺寸：按钮大小 */
+    width: 48px;
+    height: 48px;
+    
+    /* 布局：使用 flexbox 居中图标 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    /* 圆角：圆形按钮 */
+    border-radius: 50%;
+    
+    /* 背景：半透明白色背景 */
+    background: rgba(255, 255, 255, 0.8);
+    
+    /* 过渡效果：所有属性变化都有平滑过渡 */
+    transition: all 0.3s ease;
+    
+    /* 移除默认的焦点轮廓 */
+    outline: none;
+}
+
+/* ============================================
+   红心按钮悬停效果（Hover Effect）
+   ============================================
+   鼠标悬停时的交互效果 */
+.heart-button:hover {
+    /* 背景变深：悬停时背景更明显 */
+    background: rgba(255, 255, 255, 1);
+    
+    /* 放大效果：轻微放大，增加互动感 */
+    transform: scale(1.1);
+}
+
+/* ============================================
+   红心按钮激活效果（Active Effect）
+   ============================================
+   点击时的反馈效果 */
+.heart-button:active {
+    /* 点击时缩小：提供触觉反馈 */
+    transform: scale(0.95);
+}
+
+/* ============================================
+   红心图标样式（Heart Icon）
+   ============================================
+   红心 emoji 的样式 */
+.heart-icon {
+    /* 字体大小：控制红心的大小 */
+    font-size: 24px;
+    
+    /* 行高：确保垂直居中 */
+    line-height: 1;
+    
+    /* 过渡效果：图标变化时的平滑过渡 */
+    transition: transform 0.3s ease, font-size 0.3s ease;
+    
+    /* 显示方式：inline-block 允许设置 transform */
+    display: inline-block;
+}
+
+/* ============================================
+   已收藏状态样式（Favorited State）
+   ============================================
+   当按钮有 favorited 类时应用的样式 */
+.heart-button.favorited {
+    /* 已收藏时的背景色：淡红色背景 */
+    background: rgba(255, 192, 203, 0.3);
+}
+
+.heart-button.favorited .heart-icon {
+    /* 已收藏时图标稍微放大，增加视觉反馈 */
+    transform: scale(1.15);
+}
+
+/* ============================================
+   红心按钮点击动画（Click Animation）
+   ============================================
+   点击时的脉冲动画效果 */
+.heart-button:active .heart-icon {
+    transform: scale(0.9);
+}
+
+/* ============================================
+   名言卡片相对定位（Quote Card Positioning）
+   ============================================
+   为了让按钮绝对定位，卡片需要相对定位 */
+.quote-card {
+    position: relative;  /* 添加相对定位，作为按钮的定位参考 */
+}
+
+/* ============================================
+   登录按钮样式（Login Button）
+   ============================================
+   页面右上角的登录按钮，点击后跳转到登录页面 */
+.login-button {
+    /* 定位：固定定位在页面右上角 */
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    
+    /* 样式：简洁的按钮设计 */
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    padding: 10px 24px;
+    
+    /* 文字样式 */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", 
+                 "Hiragino Sans", "Hiragino Kaku Gothic ProN", 
+                 "Noto Sans JP", sans-serif;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #2c3e50;
+    letter-spacing: 0.05em;
+    text-decoration: none;
+    
+    /* 交互 */
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    
+    /* 层级：确保在首页内容之上 */
+    z-index: 100;
+    
+    /* 移除默认的焦点轮廓 */
+    outline: none;
+    
+    /* 显示为块级元素 */
+    display: inline-block;
+}
+

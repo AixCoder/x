@@ -1,0 +1,12 @@
+<%# Flash 消息 - 用于 Turbo Stream 局部更新 %>
+<% if flash[:notice] %>
+  <div class="flash-message flash-notice" data-controller="flash">
+    <%= flash[:notice] %>
+  </div>
+<% end %>
+
+<% if flash[:alert] %>
+  <div class="flash-message flash-alert" data-controller="flash">
+    <%= flash[:alert] %>
+  </div>
+<% end %>

@@ -1,0 +1,64 @@
+<%# about 页面 %>
+<div class="about-container">
+  <%= link_to "← 返回", root_path, class: "back-link", data: { turbo_action: "restore" } %>
+
+  <h1 class="about-title">About</h1>
+
+  <div class="about-content">
+    <p>这是一个优雅的日本文学名言展示应用。</p>
+    <p> features：</p>
+    <ul>
+      <li>📜 每日精选日本文学名言</li>
+      <li>❤️ 收藏喜欢的名言</li>
+      <li>🔐 安全的用户系统</li>
+    </ul>
+  </div>
+</div>
+
+<style>
+  .about-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 2rem;
+    font-family: var(--font-sans, "Montserrat", sans-serif);
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 2rem;
+    color: #6b7280;
+    text-decoration: none;
+    font-size: 0.875rem;
+    transition: color 0.2s;
+  }
+
+  .back-link:hover {
+    color: #DC4C3E;
+  }
+
+  .about-title {
+    font-size: 2rem;
+    color: #292524;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+  }
+
+  .about-content {
+    color: #4b5563;
+    line-height: 1.8;
+  }
+
+  .about-content p {
+    margin-bottom: 1rem;
+  }
+
+  .about-content ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .about-content li {
+    padding: 0.5rem 0;
+    font-size: 1rem;
+  }
+</style>

@@ -1,0 +1,161 @@
+<%# ============================================
+   登录页面 - Sessions#new
+   ============================================
+   使用 Stimulus 控制器 auth-modal 处理交互
+   表单提交到 POST /login
+%>
+
+<%# 登录页面容器 %>
+<div class="login-page" data-controller="auth-modal">
+  <%# 返回首页按钮 - 使用 Turbo 无刷新返回 %>
+  <%= link_to root_path, class: "back-to-home-button", aria: { label: "返回首页" }, data: { turbo_action: "restore" } do %>
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="20" height="20">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+    </svg>
+    返回首页
+  <% end %>
+
+  <div class="login-page-container">
+    <%# 登录卡片 %>
+    <div class="auth-card">
+
+      <%# Cat Animation Header %>
+      <div class="cat-wrapper" data-auth-modal-target="catWrapper">
+        <svg width="160" height="120" viewBox="0 0 160 120" style="transform: translateY(8px);">
+          <%# Body %>
+          <path d="M35,120 C35,100 30,50 50,35 C60,28 70,25 80,25 C90,25 100,28 110,35 C130,50 125,100 125,120" class="cat-line" />
+          <path d="M54,36 L45,10 L75,28" class="cat-line" />
+          <path d="M106,36 L115,10 L85,28" class="cat-line" />
+          <path d="M125,100 C145,100 150,80 145,60 C140,40 125,50 120,60" class="cat-line" opacity="0.8" />
+
+          <%# Face Group (Animates) %>
+          <g class="cat-face-group">
+            <g class="cat-eyes-group">
+              <circle cx="65" cy="55" r="3" class="cat-eye" />
+              <circle cx="95" cy="55" r="3" class="cat-eye" />
+            </g>
+            <path d="M80,65 L75,70 L85,70 Z" class="cat-eye" transform="scale(0.8) translate(16, 18)" />
+            <path d="M80,72 L80,78" class="cat-line" stroke-width="2" />
+          </g>
+
+          <%# Paws Group (Animates) %>
+          <g class="cat-paws-group">
+            <path d="M45,120 C45,90 55,50 65,55 C70,58 65,80 65,120" class="cat-line" fill="#FDFBF7" />
+            <path d="M115,120 C115,90 105,50 95,55 C90,58 95,80 95,120" class="cat-line" fill="#FDFBF7" />
+          </g>
+        </svg>
+      </div>
+
+      <%# Title %>
+      <div class="auth-title">
+        <span data-auth-modal-target="titleText">peter-cat</span>
+      </div>
+
+      <%# Flash 消息显示 %>
+      <% if flash[:alert] %>
+        <div class="flash-message flash-alert">
+          <%= flash[:alert] %>
+        </div>
+      <% end %>
+
+      <%# Form Section %>
+      <div class="auth-form-body">
+        <%# ============================================
+           登录表单
+           ============================================
+           - url: login_path (POST /login)
+           - data: { turbo: false } 使用 AJAX 提交，成功后 Turbo 返回首页
+        %>
+        <%= form_with url: login_path, scope: :session, data: { turbo: false, controller: "login-form", action: "submit->login-form#submit" }, class: "login-form" do |f| %>
+          <%# Email 输入框 %>
+          <div class="input-group">
+            <%= f.email_field :email,
+                id: "auth_email",
+                class: "input-field",
+                placeholder: "Email",
+                required: true,
+                value: params.dig(:session, :email),
+                data: {
+                  action: "focus->auth-modal#focusEmail blur->auth-modal#blurInput"
+                } %>
+            <%= f.label :email, "邮箱地址", for: "auth_email", class: "input-label" %>
+          </div>
+
+          <%# Password 输入框 %>
+          <div class="input-group">
+            <%= f.password_field :password,
+                id: "auth_password",
+                class: "input-field",
+                placeholder: "Password",
+                required: true,
+                data: {
+                  action: "focus->auth-modal#focusPassword blur->auth-modal#blurInput"
+                } %>
+            <%= f.label :password, "密码", for: "auth_password", class: "input-label" %>
+          </div>
+
+          <%# 记住我复选框 - iOS Safari 需要明确的过期时间才能保持登录 %>
+          <div class="remember-me-group">
+            <%= f.check_box :remember_me, id: "remember_me", class: "remember-checkbox" %>
+            <%= f.label :remember_me, "保持登录状态（30天）", for: "remember_me", class: "remember-label" %>
+          </div>
+
+          <%# 提交按钮 %>
+          <%= f.submit "登录", class: "auth-submit-btn", data: { auth_modal_target: "submitBtn" } %>
+        <% end %>
+
+        <%# 切换模式：还没有账号？去注册 %>
+        <div class="auth-toggle-area">
+          <%= link_to "还没有账号？立即注册", signup_path, class: "auth-toggle-link", data: { turbo: true } %>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<%# Flash 消息样式 %>
+<style>
+  .flash-message {
+    padding: 0.75rem 1rem;
+    margin: 0 2rem 1rem;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    text-align: center;
+  }
+
+  .flash-alert {
+    background-color: #fee2e2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+  }
+
+  .flash-notice {
+    background-color: #dbeafe;
+    color: #2563eb;
+    border: 1px solid #bfdbfe;
+  }
+
+  /* 记住我复选框样式 */
+  .remember-me-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .remember-checkbox {
+    width: 16px;
+    height: 16px;
+    accent-color: #DC4C3E;
+    cursor: pointer;
+  }
+
+  .remember-label {
+    font-size: 0.875rem;
+    color: #6b7280;
+    cursor: pointer;
+    user-select: none;
+  }
+</style>

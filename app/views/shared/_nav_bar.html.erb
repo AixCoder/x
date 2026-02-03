@@ -1,0 +1,17 @@
+<%# 导航栏 - 用于 Turbo Stream 局部更新 %>
+<nav class="nav-bar" id="nav-bar">
+  <% if logged_in? %>
+    <%# 已登录状态 %>
+    <div class="user-info">
+      <%= link_to profile_path, class: "user-profile-link" do %>
+        <span class="user-nickname"><%= current_user.nickname.presence || current_user.email %></span>
+      <% end %>
+      <%= button_to "登出", logout_path, method: :delete, class: "nav-button logout-button" %>
+    </div>
+  <% else %>
+
+    <%= link_to "登录", login_path, class: "nav-button login-button" %>
+    <%= link_to "注册", signup_path, class: "nav-button signup-button" %>
+    <%# 未登录状态 %>
+  <% end %>
+</nav>

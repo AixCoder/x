@@ -2,7 +2,7 @@
 <html>
   <head>
     <title><%= content_for(:title) || "X" %></title>
-    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
@@ -17,6 +17,19 @@
     <%= javascript_importmap_tags %>
 
     <style>
+      /* 全局重置 - 防止移动端默认边距 */
+      *, *::before, *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html, body {
+        width: 100%;
+        height: 100%;
+        overflow-x: hidden;
+      }
+
       /* Turbo 页面过渡动画 */
       .turbo-progress-bar {
         height: 3px;

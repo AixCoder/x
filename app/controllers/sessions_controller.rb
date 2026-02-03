@@ -120,7 +120,7 @@ class SessionsController < ApplicationController
   # Strong Parameters：只允许特定参数通过
   # 这是 Rails 的安全特性，防止恶意用户注入其他参数
   def session_params
-    params.require(:session).permit(:email, :password)
+    params.require(:session).permit(:email, :password, :remember_me)
   rescue ActionController::ParameterMissing
     # 如果没有 session 参数，尝试直接从 params 获取
     { email: params[:email], password: params[:password] }

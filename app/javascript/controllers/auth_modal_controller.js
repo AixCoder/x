@@ -147,15 +147,15 @@ export default class extends Controller {
     updateFormFields() {
         console.log("[AuthModal] 更新表单字段，当前模式:", this.mode)
 
-        // 控制密码确认字段的显示/隐藏
+        // 控制密码确认字段的显示/隐藏 - 使用 CSS 类保持布局稳定
         if (this.hasPasswordConfirmGroupTarget) {
             if (this.mode === "register") {
-                this.passwordConfirmGroupTarget.style.display = "block"
+                this.passwordConfirmGroupTarget.classList.add("is-visible")
                 // 添加required属性
                 const confirmInput = this.passwordConfirmGroupTarget.querySelector('input')
                 if (confirmInput) confirmInput.required = true
             } else {
-                this.passwordConfirmGroupTarget.style.display = "none"
+                this.passwordConfirmGroupTarget.classList.remove("is-visible")
                 // 移除required属性
                 const confirmInput = this.passwordConfirmGroupTarget.querySelector('input')
                 if (confirmInput) confirmInput.required = false

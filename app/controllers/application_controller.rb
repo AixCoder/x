@@ -5,7 +5,16 @@ class ApplicationController < ActionController::Base
   # 启用CSRF保护（Rails默认启用）
   # :exception 模式会在CSRF验证失败时抛出异常
   # :null_session 模式会清空会话（更温和）
-  protect_from_forgery with: :exception
+  protect_from_forgery with: :exception, prepend: true
+
+  # 确保 API 请求返回 JSON 格式的错误
+  rescue_from ActionController::InvalidAuthenticityToken do |exception|
+    Rails.logger.error "CSRF验证失败: #{exception.message}"
+    respond_to do |format|
+      format.json { render json: { error: "安全验证失败，请刷新页面重试" }, status: :unprocessable_entity }
+      format.html { redirect_to root_path, alert: "安全验证失败，请刷新页面重试" }
+    end
+  end
 
   # ============================================
   # 用户认证相关辅助方法

@@ -10,10 +10,10 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_02_02_055049) do
+ActiveRecord::Schema[7.2].define(version: 2026_02_03_123449) do
   create_table "shared_quotes", force: :cascade do |t|
     t.integer "quote_id", null: false
-    t.integer "user_id", null: false
+    t.integer "user_id"
     t.string "token", null: false
     t.datetime "expires_at", null: false
     t.integer "accessed_count", default: 0

@@ -9,9 +9,15 @@
       <%= button_to "登出", logout_path, method: :delete, class: "nav-button logout-button" %>
     </div>
   <% else %>
-
-    <%= link_to "登录", login_path, class: "nav-button login-button" %>
-    <%= link_to "注册", signup_path, class: "nav-button signup-button" %>
     <%# 未登录状态 %>
+    <div class="nav-left">
+      <button type="button" class="nav-join-btn" data-action="click->auth-modal#open">
+        Join
+      </button>
+    </div>
+    <div class="nav-right">
+      <%= link_to "登录", login_path, class: "nav-button login-button" %>
+      <%= link_to "注册", signup_path, class: "nav-button signup-button" %>
+    </div>
   <% end %>
 </nav>

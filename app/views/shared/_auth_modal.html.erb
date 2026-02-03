@@ -48,21 +48,20 @@
         background-color: rgba(28, 25, 23, 0.2);
         backdrop-filter: blur(2px);
         z-index: 50;
+        padding: 1rem;
 
+        /* 默认隐藏，使用 visibility 避免首次渲染布局抖动 */
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 1rem;
-
-        /* 默认隐藏，通过JS添加 .is-open 显示 */
-        opacity: 0;
         visibility: hidden;
+        opacity: 0;
         transition: opacity 0.3s ease, visibility 0.3s;
     }
 
     .auth-backdrop.is-open {
-        opacity: 1;
         visibility: visible;
+        opacity: 1;
     }
 
     /* === 2. 模态框卡片 (Card) === */
@@ -76,13 +75,15 @@
         overflow: hidden;
         position: relative;
 
-        /* 进场动画 */
-        transform: scale(0.95);
-        transition: transform 0.3s ease-out;
+        /* 进场动画 - 使用 opacity 代替 scale 避免高度计算问题 */
+        opacity: 0;
+        transform: translateY(-10px);
+        transition: opacity 0.3s ease, transform 0.3s ease;
     }
 
     .auth-backdrop.is-open .auth-card {
-        transform: scale(1);
+        opacity: 1;
+        transform: translateY(0);
     }
 
     /* 关闭按钮 */
@@ -177,6 +178,21 @@
     .input-group {
         position: relative;
         margin-bottom: 1.25rem;
+    }
+
+    /* 密码确认字段 - 使用 height 保持布局稳定 */
+    .password-confirm-group {
+        height: 0;
+        margin-bottom: 0;
+        opacity: 0;
+        overflow: hidden;
+        transition: height 0.2s ease, opacity 0.2s ease, margin 0.2s ease;
+    }
+
+    .password-confirm-group.is-visible {
+        height: 3.5rem; /* 固定高度匹配其他 input-group */
+        margin-bottom: 1.25rem;
+        opacity: 1;
     }
 
     .input-field {
@@ -292,7 +308,7 @@
     /* 首页触发按钮 (Join) */
     .nav-join-btn {
         position: fixed;
-        top: 7.5rem;
+        top: 1.5rem;
         left: 1.5rem;
         font-family: var(--font-sans);
         font-size: 0.75rem;
@@ -499,7 +515,7 @@
           </div>
 
           <%# Password Confirmation - 仅在注册模式下显示 %>
-          <div class="input-group" data-auth-modal-target="passwordConfirmGroup" style="display: none;">
+          <div class="input-group password-confirm-group" data-auth-modal-target="passwordConfirmGroup">
             <%# 注册模式下参数格式为 user[password_confirmation] %>
             <%= f.password_field :password_confirmation, class: "input-field", placeholder: "Confirm Password",
                   name: "user[password_confirmation]",
@@ -508,7 +524,7 @@
           </div>
 
           <%# Remember Me - 默认记住用户30天 %>
-          <%= f.hidden_field :remember_me, value: "1", name: "session[remember_me]" %>
+          <input type="hidden" name="session[remember_me]" value="1">
 
           <%# Submit Button %>
           <%= f.submit "Enter", class: "auth-submit-btn", data: { auth_modal_target: "submitBtn" } %>

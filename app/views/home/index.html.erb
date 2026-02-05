@@ -28,6 +28,10 @@
     <h1 class="quote-text"><%= @quote %></h1>
     <p class="quote-subtitle">日本文学名言</p>
   </article>
+
+  <%# 添加红心收藏功能视图---测试 %>
+  <%= render "shared/like_interaction" %>
+
 </main>
 
 <%# ============================================
@@ -53,9 +57,11 @@
 <%# ============================================
    第3层：底部操作栏（固定在底部）
    ============================================ %>
-<div class="bottom-bar" data-controller="bottom-menu">
+<div class="bottom-bar" data-controller="bottom-menu like-interaction">
 
-  <%= link_to "授权登录", player_path, class: "test-go-to-player-btn"%>
+  <%= render "shared/share_button" %>
+
+  <%#= link_to "", player_path, class: "test-go-to-player-btn"%>
 
   <%# 前往播放页面按钮 %>
   <%= link_to player_path, class: "go-to-player-btn", data: { turbo: true } do %>

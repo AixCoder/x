@@ -1,0 +1,42 @@
+<%# app/views/shared/_share_button.html.erb %>
+<div class="like-wrapper" data-controller="like-interaction">
+
+  <%# 分享按钮 %>
+  <%# 这里我们用了 Tailwind 的样式类，让它看起来像原来的按钮，但 Hover 时变成深灰色而不是红色 %>
+  <button type="button"
+          class="p-3 rounded-full text-stone-300 transition-all duration-300 hover:bg-stone-50 hover:text-stone-600 hover:scale-110 flex items-center justify-center"
+          aria-label="Share this quote"
+          data-action="click->like-interaction#showCat">
+    <%# Share Icon (连接点图标) %>
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 2rem; height: 2rem;">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z" />
+    </svg>
+  </button>
+
+  <%# 小猫弹窗 (与点赞按钮完全一致的结构) %>
+  <%# 因为控制器需要操作这些元素，所以必须包含在内，平时是隐藏的 %>
+  <div class="cat-popup-container" data-like-interaction-target="catPopup">
+
+    <div class="speech-bubble"
+         data-action="click->like-interaction#copy"
+         data-like-interaction-target="bubble">
+      <span data-like-interaction-target="bubbleText">
+        喜欢就分享，点击复制链接 <span style="opacity:0.6; margin-left:2px; font-style: normal;">🔗</span>
+      </span>
+    </div>
+
+    <svg class="popup-cat-svg" viewBox="0 0 160 120">
+      <path d="M35,120 C35,100 30,50 50,35 C60,28 70,25 80,25 C90,25 100,28 110,35 C130,50 125,100 125,120" class="popup-cat-line" />
+      <path d="M54,36 L45,10 L75,28" class="popup-cat-line" />
+      <path d="M106,36 L115,10 L85,28" class="popup-cat-line" />
+      <g class="popup-cat-eyes">
+        <circle cx="65" cy="55" r="3" fill="#DC4C3E" />
+        <circle cx="95" cy="55" r="3" fill="#DC4C3E" />
+        <path d="M80,65 L75,70 L85,70 Z" fill="#DC4C3E" transform="scale(0.8) translate(16, 18)" />
+        <path d="M80,72 L80,78" class="popup-cat-line" stroke-width="2" />
+      </g>
+      <path d="M40,120 L40,110 C40,100 50,100 50,110 L50,120" class="popup-cat-line" />
+      <path d="M120,120 L120,110 C120,100 110,100 110,110 L110,120" class="popup-cat-line" />
+    </svg>
+  </div>
+</div>

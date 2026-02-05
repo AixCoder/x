@@ -1,0 +1,224 @@
+<%# app/views/shared/_like_interaction.html.erb %>
+<%#
+  使用方法：
+  <%= render "shared/like_interaction"
+%>
+
+<div class="like-wrapper" data-controller="like-interaction">
+
+  <%# 1. 红心按钮 %>
+  <button type="button"
+          class="heart-btn"
+          aria-label="Like this quote"
+          data-like-interaction-target="heart"
+          data-action="click->like-interaction#toggle">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+    </svg>
+  </button>
+
+  <%# 2. 小猫弹窗 %>
+  <div class="cat-popup-container" data-like-interaction-target="catPopup">
+
+    <%# 对话气泡 (Clickable) %>
+    <div class="speech-bubble"
+         data-action="click->like-interaction#copy"
+         data-like-interaction-target="bubble">
+      <span data-like-interaction-target="bubbleText">
+        喜欢就分享，点击复制链接 <span style="opacity:0.6; margin-left:2px;">🔗</span>
+      </span>
+    </div>
+
+    <%# 小猫 SVG %>
+    <svg class="popup-cat-svg" viewBox="0 0 160 120">
+      <path d="M35,120 C35,100 30,50 50,35 C60,28 70,25 80,25 C90,25 100,28 110,35 C130,50 125,100 125,120" class="popup-cat-line" />
+      <path d="M54,36 L45,10 L75,28" class="popup-cat-line" />
+      <path d="M106,36 L115,10 L85,28" class="popup-cat-line" />
+
+      <g class="popup-cat-eyes">
+        <circle cx="65" cy="55" r="3" fill="#DC4C3E" />
+        <circle cx="95" cy="55" r="3" fill="#DC4C3E" />
+        <path d="M80,65 L75,70 L85,70 Z" fill="#DC4C3E" transform="scale(0.8) translate(16, 18)" />
+        <path d="M80,72 L80,78" class="popup-cat-line" stroke-width="2" />
+      </g>
+
+      <path d="M40,120 L40,110 C40,100 50,100 50,110 L50,120" class="popup-cat-line" />
+      <path d="M120,120 L120,110 C120,100 110,100 110,110 L110,120" class="popup-cat-line" />
+    </svg>
+  </div>
+
+</div>
+
+
+<style>
+    /* app/assets/stylesheets/cat_interaction.css */
+
+    /* 引入字体，确保独立加载时也有字体支持 */
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Montserrat:wght@300;400;600&display=swap');
+
+    :root {
+        --like-red: #e11d48; /* 玫瑰红 */
+        --cat-stroke: #DC4C3E;
+    }
+
+    /* === 1. 交互容器 === */
+    .like-wrapper {
+        display: inline-block;
+        position: relative;
+    }
+
+    /* === 2. 红心按钮 === */
+    .heart-btn {
+        background: transparent;
+        border: none;
+        padding: 0.75rem;
+        cursor: pointer;
+        color: #d6d3d1; /* stone-300 */
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 9999px; /* 圆形 */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .heart-btn:hover {
+        background-color: #fafaf9; /* stone-50 */
+        color: #fb7185; /* 浅红 hover */
+        transform: scale(1.1);
+    }
+
+    /* 激活状态 (JS 切换类名) */
+    .heart-btn.is-liked {
+        color: var(--like-red);
+        background-color: #fff1f2; /* rose-50 */
+    }
+    .heart-btn.is-liked svg {
+        fill: currentColor;
+        transform: scale(1.1);
+    }
+
+    .heart-btn svg {
+        width: 2rem;
+        height: 2rem;
+        stroke-width: 1.5;
+        transition: transform 0.3s ease;
+    }
+
+    /* === 3. 小猫弹窗 (Fixed Position) === */
+    .cat-popup-container {
+        position: fixed;
+        bottom: 0;
+        left: 2rem; /* Left side */
+        right: auto;
+        z-index: 100;
+        pointer-events: none; /* 让点击穿透，不遮挡页面内容 */
+
+        /* 初始状态：完全藏在底部下面 */
+        transform: translateY(100%);
+        transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); /* 有弹性的贝塞尔曲线 */
+    }
+
+    .cat-popup-container.is-visible {
+        transform: translateY(10%); /* 探出头来，保留一点身体在下面 */
+    }
+
+    /* 小猫 SVG 样式 */
+    .popup-cat-svg {
+        width: 90px;
+        height: auto;
+        overflow: visible;
+    }
+
+    .popup-cat-line {
+        fill: none;
+        stroke: var(--cat-stroke);
+        stroke-width: 3;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+
+    /* 眼睛看着上面 */
+    .popup-cat-eyes {
+        transform: translateY(-2px);
+    }
+
+    /* === 4. 对话气泡 (Literary Style) === */
+    .speech-bubble {
+        position: absolute;
+        top: 15px; /* Vertically align with head */
+        left: 90px; /* To the right of the 90px cat */
+
+        background-color: #ffffff;
+        color: #44403c; /* Stone 700 */
+        border: 1px solid #e7e5e4;
+
+        /* 更新：方形圆角，衬线字体 */
+        padding: 0.6rem 1.2rem;
+        border-radius: 4px;
+        border-bottom-left-radius: 0px; /* Sharp corner pointing to cat */
+
+        /* Literary Fonts */
+        font-family: "Cormorant Garamond", serif;
+        font-style: italic;
+        font-size: 1.1rem;
+        font-weight: 500;
+        letter-spacing: 0.02em;
+        white-space: nowrap;
+
+        box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.08);
+        cursor: pointer;
+        pointer-events: auto; /* Enable clicks */
+        outline: none;
+
+        opacity: 0;
+        transform: scale(0.9) translateX(-10px);
+        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        user-select: none;
+    }
+
+    .speech-bubble:hover {
+        color: #DC4C3E;
+        background-color: #fff1f2;
+        border-color: #fecdd3;
+        transform: scale(1.02) translateX(0);
+        box-shadow: 0 10px 25px -5px rgba(220, 76, 62, 0.1);
+    }
+
+    .speech-bubble:active {
+        transform: scale(0.98);
+    }
+
+    .cat-popup-container.is-visible .speech-bubble {
+        opacity: 1;
+        transform: scale(1) translateX(0);
+    }
+
+    /* 移动端适配 */
+    @media (max-width: 640px) {
+        .cat-popup-container {
+            left: 50%;
+            right: auto;
+            margin-left: -45px; /* Half of 90px */
+            width: 90px;
+        }
+        .speech-bubble {
+            /* Keep mobile bubble on top */
+            left: 50%;
+            top: -50px;
+
+            border-radius: 4px;
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+
+            transform: translateX(-50%) scale(0.9) translateY(10px);
+        }
+        .cat-popup-container.is-visible .speech-bubble {
+            transform: translateX(-50%) scale(1) translateY(0);
+        }
+    }
+
+</style>

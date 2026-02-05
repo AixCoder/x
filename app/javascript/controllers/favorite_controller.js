@@ -50,6 +50,7 @@ export default class FavoriteController extends Controller {
   // 通过检查页面中的登录状态标志
   isLoggedIn() {
     // 方法1: 检查 body 或 html 上的 data-user-logged-in 属性
+      console.log("检查用户是否登录")
     const bodyFlag = document.body.dataset.userLoggedIn
     if (bodyFlag === 'true') return true
 
@@ -92,7 +93,7 @@ export default class FavoriteController extends Controller {
     } else {
       console.warn('[Favorite] 未找到 auth-modal 元素或 Stimulus 未加载')
       // 降级：跳转登录页面
-      window.location.href = '/login'
+      // window.location.href = '/login'
     }
   }
 

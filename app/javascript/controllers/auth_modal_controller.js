@@ -63,7 +63,7 @@ export default class extends Controller {
      * 给遮罩层添加 is-open 类，触发CSS过渡动画显示模态框
      */
     open(e) {
-        console.log("open auth modal view")
+        console.log("open auth view")
         if (e) e.preventDefault()
         // 确保是登录模式（默认）
         if (this.mode !== "login") {

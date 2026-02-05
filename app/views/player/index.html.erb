@@ -3,33 +3,32 @@
    ============================================ %>
 
 <%# Flash 消息容器 %>
-<div id="flash-container"></div>
+<!--<div id="flash-container"></div>-->
 
-<%# 返回首页按钮 %>
-<%= link_to root_path, class: "back-to-home-button", data: { turbo_action: "restore" } do %>
+<button type="button" class="back-to-home-button" onclick="history.back()">
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="20" height="20">
     <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
   </svg>
-  返回首页
-<% end %>
+  返回
+</button>
 
 <%# 外层容器 %>
 <div>
   <%# 导航栏
-
   %>
-  <%= render "shared/nav_bar" %>
+  <%#= render "shared/nav_bar" %>
 
   <%# Join 按钮（右上角）- 链接到极简登录页 %>
   <%= link_to simple_login_path, class: "nav-join-btn player-join-btn", data: { turbo: true } do %>
-    Join
+    sample-Join
   <% end %>
 
   <%# 播放页面内容 %>
-  <div class="simple-player-page" data-controller="audio-player">
+  <div class="simple-player-page" data-controller="audio-player favorite">
     <%# 音频元素 %>
     <audio data-audio-player-target="audio" preload="none">
-      <source src="https://aqqmusic.tc.qq.com/C400000qqas91NqBEM.m4a?guid=2044384204&vkey=C08C041AA5862D3B87DB0B01852E894DAD02C016EC726BCB7006BE3279AF6D5B1D2AC1E6093AD2C89D7EFBB5A82154B397E8D17880D03CE3__v2b93270e&uin=&fromtag=123032" type="audio/mp4">
+      <source src="https://aqqmusic.tc.qq.com/C400000qqas91NqBEM.m4a?guid=2044384204&vkey=6E5647D63A309701B761DEA7FACD78BFAB1FC8F2964B9331C07E7AC0C89CAA8E4753C64167A43DCB0B696D4109159ADB42C5CDC1283D25AD__v21ea05d07&uin=&fromtag=123032
+" type="audio/mp4">
     </audio>
 
     <%# 播放按钮 %>
@@ -46,8 +45,33 @@
       </span>
     </button>
 
+    <%# 红心按钮 %>
+    <button type="button"
+            class="test-heart-button"
+            data-favorite-target="button"
+            data-action="click->favorite#toggle"
+            aria-label="收藏这条名言">
+      <span class="heart-icon">🤍</span>
+    </button>
+
+
     <%# 播放状态提示 %>
     <p class="audio-status" data-audio-player-target="status">点击播放</p>
+
+  </div>
+
+  <div data-controller="auth-modal">
+
+    <%# 触发按钮 - 左上角 Join 按钮 %>
+<!--    <button type="button"-->
+<!--            class="test-nav-join-btn"-->
+<!--            data-action="click->auth-modal#open">-->
+<!--      t-Join-->
+<!--    </button>-->
+
+    <%# 渲染模态框 %>
+    <%= render "shared/auth_modal" %>
+
   </div>
 </div>
 

@@ -1,7 +1,7 @@
 class CreateUsers < ActiveRecord::Migration[7.2]
   def change
-    create_table :users do |t|
-      t.string :email, null: false
+    create_table :users do |t| #创建users表
+      t.string :email, null: false  #创建email 列 字符串类型
       t.string :password_digest, null: false
 
       t.timestamps

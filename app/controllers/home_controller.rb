@@ -3,20 +3,21 @@ class HomeController < ApplicationController
   QUOTES = {
     1 => "花中樱花，人中武士",
     2 => "世事无常，转瞬即逝",
-    3 => "静心是一切美的源泉"
+    3 => "静心是一切美的源泉",
+    4 => "风中燃尽",
+    5 => "嘻嘻哈哈",
+    6 => "春夏秋冬"
   }.freeze
 
   helper_method :sharer_display_name
 
   def index
-    # 如果有分享 ID，显示对应名言，否则随机
-    if params[:quote_id].present? && QUOTES[params[:quote_id].to_i]
-      @quote_id = params[:quote_id].to_i
-      @quote = QUOTES[@quote_id]
-    else
+
+      # 新访问，随机选择
       @quote_id = QUOTES.keys.sample
       @quote = QUOTES[@quote_id]
-    end
+      # 保存到 session
+      session[:current_quote_id] = @quote_id
   end
   
   # 登录页面：使用 shared/auth_modal partial
@@ -26,6 +27,7 @@ class HomeController < ApplicationController
 
   # 关于页面
   def about
+
   end
 
   # 红心列表页面

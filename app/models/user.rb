@@ -14,5 +14,5 @@ class User < ApplicationRecord
 
   # 密码验证（只在创建时验证，更新时可以留空表示不修改密码）
   # length: { minimum: 6 } - 密码最少6位
-  validates :password, length: { minimum: 6 }, if: -> { password.present? }
+  validates :password, length: { minimum: 6 }, allow_nil: true
 end

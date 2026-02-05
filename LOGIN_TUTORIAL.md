@@ -155,11 +155,31 @@ class User < ApplicationRecord
 end
 ```
 
+# 测试模型
+命令行
+rails console
+
+# 测试 1：创建有效用户
+user = User.create(email: "test@example.com", password: "123456")
+puts user.persisted?  # 应该输出 true
+
+# 测试 2：验证密码
+puts user.authenticate("123456") == user  # 应该输出 true
+puts user.authenticate("wrong")           # 应该输出 false
+
+# 测试 3：邮箱唯一性
+user2 = User.create(email: "test@example.com", password: "abcdef")
+puts user2.errors[:email]  # 应该输出 ["has already been taken"]
+
+# 测试 4：密码长度
+user3 = User.new(email: "a@b.com", password: "123")
+puts user3.valid?  # 应该输出 false
+puts user3.errors[:password]  # 应该看到长度错误
 ### 第 3 步：创建 Sessions 控制器
 
 生成控制器：
 ```bash
-rails generate controller Sessions
+rails generate controller Sessions new create destroy --no-assets --no-helper
 ```
 
 编辑 `app/controllers/sessions_controller.rb`：
@@ -215,6 +235,9 @@ Rails.application.routes.draw do
   post "signup", to: "users#create"
 end
 ```
+##### 立即测试路由：
+rails routes | grep session
+
 
 ### 第 5 步：添加辅助方法
 

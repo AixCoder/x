@@ -39,14 +39,57 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   // Stimulus 目标元素定义
-  static targets = ["backdrop", "menu"]
+  // trigger: 触发按钮（在 .bottom-bar 中的实例）
+  // backdrop, menu: 菜单元素（在独立节点 .bottom-menu-backdrop 中的实例）
+  static targets = ["trigger", "backdrop", "menu"]
 
   /**
    * 控制器连接时的初始化
    * 在 DOM 中连接时自动调用
+   *
+   * 架构说明：
+   * - 触发按钮和菜单分别位于独立的 DOM 节点
+   * - 通过自定义事件进行跨实例通信
+   * - 菜单实例监听事件来控制显示/隐藏
    */
   connect() {
     console.log("Bottom menu controller connected")
+
+    // 如果当前实例有菜单目标（即独立节点实例），则监听全局事件
+    if (this.hasBackdropTarget && this.hasMenuTarget) {
+      this._handleOpen = this._handleOpen.bind(this)
+      this._handleClose = this._handleClose.bind(this)
+      document.addEventListener("bottom-menu:open", this._handleOpen)
+      document.addEventListener("bottom-menu:close", this._handleClose)
+    }
+  }
+
+  /**
+   * 控制器断开连接时清理
+   */
+  disconnect() {
+    if (this.hasBackdropTarget && this.hasMenuTarget) {
+      document.removeEventListener("bottom-menu:open", this._handleOpen)
+      document.removeEventListener("bottom-menu:close", this._handleClose)
+    }
+  }
+
+  /**
+   * 内部方法：处理打开事件
+   */
+  _handleOpen() {
+    this.backdropTarget.classList.add("is-open")
+    this.menuTarget.classList.add("is-open")
+    document.body.style.overflow = "hidden"
+  }
+
+  /**
+   * 内部方法：处理关闭事件
+   */
+  _handleClose() {
+    this.backdropTarget.classList.remove("is-open")
+    this.menuTarget.classList.remove("is-open")
+    document.body.style.overflow = ""
   }
 
   /**
@@ -54,14 +97,13 @@ export default class extends Controller {
    * @param {Event} e - 点击事件
    *
    * 视觉效果：
-   * - 添加 is-open 类触发 CSS 过渡动画
+   * - 触发自定义事件通知菜单实例
+   * - 菜单实例接收到事件后添加 is-open 类
    * - 禁止背景滚动（body overflow: hidden）
    */
   open(e) {
     if (e) e.preventDefault()
-    this.backdropTarget.classList.add("is-open")
-    this.menuTarget.classList.add("is-open")
-    document.body.style.overflow = "hidden"
+    document.dispatchEvent(new CustomEvent("bottom-menu:open"))
   }
 
   /**
@@ -69,14 +111,13 @@ export default class extends Controller {
    * @param {Event} e - 点击事件
    *
    * 清理：
-   * - 移除 is-open 类
+   * - 触发自定义事件通知菜单实例
+   * - 菜单实例接收到事件后移除 is-open 类
    * - 恢复背景滚动
    */
   close(e) {
     if (e) e.preventDefault()
-    this.backdropTarget.classList.remove("is-open")
-    this.menuTarget.classList.remove("is-open")
-    document.body.style.overflow = ""
+    document.dispatchEvent(new CustomEvent("bottom-menu:close"))
   }
 
   /**
@@ -84,8 +125,14 @@ export default class extends Controller {
    * @param {Event} e - 点击事件
    *
    * 功能：
-   * - 关闭菜单
+   * - 关闭菜单（通过触发自定义事件）
    * - 使用 Turbo 进行无刷新导航（150ms 延迟确保动画完成）
+   * - 自动缓存当前页面，确保返回时能恢复状态
+   *
+   * Turbo 缓存机制：
+   * - Turbo 会自动缓存访问过的页面
+   * - 使用 data-turbo-action="restore" 返回时从缓存恢复
+   * - 不需要手动干预，Turbo 默认行为即可满足需求
    */
   itemClick(e) {
     e.preventDefault()
@@ -93,12 +140,11 @@ export default class extends Controller {
     // 获取链接地址
     const href = e.currentTarget.getAttribute('href')
 
-    // 关闭菜单
-    this.backdropTarget.classList.remove("is-open")
-    this.menuTarget.classList.remove("is-open")
-    document.body.style.overflow = ""
+    // 关闭菜单（触发自定义事件）
+    document.dispatchEvent(new CustomEvent("bottom-menu:close"))
 
     // 使用 Turbo 进行无刷新导航
+    // 注意：Turbo 会自动缓存当前页面，返回时从缓存恢复
     setTimeout(() => {
       if (window.Turbo) {
         window.Turbo.visit(href)
@@ -140,10 +186,8 @@ export default class extends Controller {
     const quoteCard = document.querySelector('.quote-card[data-quote-id]')
     const quoteId = quoteCard ? quoteCard.dataset.quoteId : '1'
 
-    // 关闭菜单
-    this.backdropTarget.classList.remove("is-open")
-    this.menuTarget.classList.remove("is-open")
-    document.body.style.overflow = ""
+    // 关闭菜单（触发自定义事件）
+    document.dispatchEvent(new CustomEvent("bottom-menu:close"))
 
     try {
       // 获取 CSRF Token（兼容不同浏览器的选择器）

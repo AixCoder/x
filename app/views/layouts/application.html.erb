@@ -7,6 +7,9 @@
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
+    <%# Turbo 缓存配置：允许缓存首页，确保返回时状态恢复 %>
+    <%= turbo_page_requires_reload if controller_name == 'sessions' || controller_name == 'users' %>
+
     <%= yield :head %>
 
     <link rel="manifest" href="/manifest.json">

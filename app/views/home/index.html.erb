@@ -1,19 +1,17 @@
 <%# ============================================
    首页视图 - 日本文学名言展示页面
    ============================================
-   层级结构：
-   1. 底层：全屏主内容区（名言卡片）
-   2. 上层：顶部导航栏（登录/状态 + Join按钮）
-   3. 上层：底部操作栏（播放按钮 + 更多菜单）
-   4. 顶层：Flash消息、模态框、弹出菜单
 %>
 
+<% content_for :head do %>
+  <%= stylesheet_link_tag "home", "data-turbo-track": "reload" %>
+<% end %>
 <%# ============================================
    第1层：全屏主内容区（底层）
    ============================================ %>
-<div class="main-content">
+<main class="main-content">
   <%# 名言卡片 %>
-  <div class="quote-card"
+  <article class="quote-card"
        data-controller="favorite"
        data-favorite-quote-value="<%= @quote %>"
        data-quote-id="<%= @quote_id %>">
@@ -29,8 +27,8 @@
 
     <h1 class="quote-text"><%= @quote %></h1>
     <p class="quote-subtitle">日本文学名言</p>
-  </div>
-</div>
+  </article>
+</main>
 
 <%# ============================================
    第2层：顶部导航栏（固定在顶部）
@@ -56,6 +54,9 @@
    第3层：底部操作栏（固定在底部）
    ============================================ %>
 <div class="bottom-bar" data-controller="bottom-menu">
+
+  <%= link_to "授权登录", player_path, class: "test-go-to-player-btn"%>
+
   <%# 前往播放页面按钮 %>
   <%= link_to player_path, class: "go-to-player-btn", data: { turbo: true } do %>
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="20" height="20">
@@ -64,431 +65,53 @@
     前往播放页面
   <% end %>
 
-  <%# 更多按钮 %>
-  <button type="button" class="more-btn" data-action="click->bottom-menu#open">
+  <%# 更多按钮 - 通过自定义事件触发独立菜单 %>
+  <button type="button"
+          class="more-btn"
+          data-action="click->bottom-menu#open"
+          data-bottom-menu-target="trigger">
     ...
   </button>
-
-  <%# 底部弹出菜单（遮罩层） %>
-  <div class="bottom-menu-backdrop" data-bottom-menu-target="backdrop" data-action="click->bottom-menu#close">
-    <div class="bottom-menu-container" data-bottom-menu-target="menu">
-      <div class="bottom-menu-handle"></div>
-      <nav class="bottom-menu-nav">
-        <button type="button" class="bottom-menu-item share-btn" data-action="click->bottom-menu#share">
-          <span class="bottom-menu-icon">📤</span>
-          <span class="bottom-menu-text">分享</span>
-        </button>
-        <%= link_to about_path, class: "bottom-menu-item", data: { action: "click->bottom-menu#itemClick" } do %>
-          <span class="bottom-menu-icon">ℹ️</span>
-          <span class="bottom-menu-text">about</span>
-        <% end %>
-        <%= link_to favorites_path, class: "bottom-menu-item", data: { action: "click->bottom-menu#itemClick" } do %>
-          <span class="bottom-menu-icon">❤️</span>
-          <span class="bottom-menu-text">红心列表</span>
-        <% end %>
-      </nav>
-    </div>
-  </div>
 </div>
 
 <%# ============================================
-   首页样式
+   第5层：底部弹出菜单（独立节点，body结束前）
    ============================================
-   层级结构：
-   1. 主内容区（全屏底层）
-   2. 顶部导航栏（固定）
-   3. 底部操作栏（固定）
-   4. 弹层（Flash、模态框、菜单）
-   ============================================ %>
-<style>
-  <%# ========== 第1层：主内容区（全屏）========== %>
-  .main-content {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    /* 上下留出导航栏和底部栏的空间，左右使用 env(safe-area-inset) 适配刘海屏 */
-    padding: 80px max(1.5rem, env(safe-area-inset-right)) 100px max(1.5rem, env(safe-area-inset-left));
-    z-index: 1;
-    background: #FDFBF7; /* 米白色背景，与登录卡片一致 */
-    /* 确保内容不会超出安全区域 */
-    box-sizing: border-box;
-  }
+   注：从 bottom-bar 中移出，避免嵌套层级问题
+       通过 Stimulus 控制器与触发按钮通信
+%>
+<div class="bottom-menu-backdrop"
+     data-controller="bottom-menu"
+     data-bottom-menu-target="backdrop"
+     data-action="click->bottom-menu#close">
+  <div class="bottom-menu-container" data-bottom-menu-target="menu">
+    <div class="bottom-menu-handle"></div>
+    <nav class="bottom-menu-nav">
+      <button type="button" class="bottom-menu-item share-btn" data-action="click->bottom-menu#share">
+        <span class="bottom-menu-icon">📤</span>
+        <span class="bottom-menu-text">分享</span>
+      </button>
+      <%#
+         导航到 about 页面
+         - turbo-action="advance": 将首页加入历史记录并缓存
+         - action="click->bottom-menu#close": 先关闭菜单，然后正常跳转
+       %>
+      <%= link_to about_path, class: "bottom-menu-item", id: "nav-about",
+            data: { "turbo-action": "advance", action: "click->bottom-menu#close" } do %>
+        <span class="bottom-menu-icon">ℹ️</span>
+        <span class="bottom-menu-text">about</span>
+      <% end %>
 
-  .quote-card {
-    position: relative;
-    max-width: 600px;
-    width: 100%;
-    text-align: center;
-    padding: 2rem;
-  }
-
-  .heart-button {
-    position: absolute;
-    top: 0;
-    right: 0;
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    cursor: pointer;
-    padding: 0.5rem;
-    transition: transform 0.2s ease;
-    z-index: 10;
-  }
-
-  .heart-button:hover {
-    transform: scale(1.1);
-  }
-
-  .heart-button:active {
-    transform: scale(0.95);
-  }
-
-  .quote-text {
-    font-family: "Noto Serif SC", serif;
-    font-size: 2rem;
-    font-weight: 400;
-    color: #292524;
-    line-height: 1.6;
-    margin: 0 0 1rem;
-  }
-
-  .quote-subtitle {
-    font-family: "Montserrat", sans-serif;
-    font-size: 0.875rem;
-    color: #a8a29e;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    margin: 0;
-  }
-
-  <%# ========== 第2层：顶部导航栏 ========== %>
-  <%# Flash 消息 %>
-  #flash-container {
-    position: fixed;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 1000;
-  }
-
-  .flash-message {
-    padding: 0.75rem 1.5rem;
-    border-radius: 8px;
-    font-size: 0.875rem;
-    text-align: center;
-    animation: fadeInDown 0.3s ease;
-  }
-
-  @keyframes fadeInDown {
-    from {
-      opacity: 0;
-      transform: translateY(-20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  .flash-notice {
-    background-color: #dcfce7;
-    color: #16a34a;
-    border: 1px solid #bbf7d0;
-  }
-
-  <%# 导航栏 %>
-  .nav-bar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    padding: 1rem 2rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    z-index: 100;
-    background: linear-gradient(to bottom, rgba(255,255,255,0.95), rgba(255,255,255,0));
-    pointer-events: none;
-  }
-
-  .nav-bar > * {
-    pointer-events: auto;
-  }
-
-  .nav-left {
-    display: flex;
-    align-items: center;
-  }
-
-  .nav-right {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-  }
-
-  .nav-bar .user-info {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-left: auto;
-  }
-
-  .user-profile-link {
-    text-decoration: none;
-    padding: 0.5rem 1rem;
-    border-radius: 8px;
-    transition: all 0.2s ease;
-  }
-
-  .user-profile-link:hover {
-    background: #f3f4f6;
-  }
-
-  .user-nickname {
-    font-size: 0.875rem;
-    color: #4b5563;
-    font-weight: 500;
-  }
-
-  .nav-button {
-    padding: 0.5rem 1.25rem;
-    border-radius: 8px;
-    font-size: 0.875rem;
-    font-weight: 500;
-    text-decoration: none;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border: none;
-    font-family: inherit;
-    pointer-events: auto;
-  }
-
-  .login-button {
-    background: white;
-    color: #374151;
-    border: 1px solid #d1d5db;
-  }
-
-  .login-button:hover {
-    background: #f9fafb;
-    border-color: #9ca3af;
-  }
-
-  .signup-button {
-    background: #DC4C3E;
-    color: white;
-  }
-
-  .signup-button:hover {
-    background: #c93f32;
-  }
-
-  .logout-button {
-    background: transparent;
-    color: #6b7280;
-    border: 1px solid #e5e7eb;
-  }
-
-  .logout-button:hover {
-    background: #f3f4f6;
-    color: #374151;
-  }
-
-  <%# Join 按钮（在导航栏左侧） %>
-  .nav-join-btn {
-    font-family: "Montserrat", sans-serif;
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: #a8a29e;
-    background: none;
-    border: none;
-    cursor: pointer;
-    transition: color 0.2s;
-    padding: 0.5rem 0;
-  }
-
-  .nav-join-btn:hover {
-    color: #DC4C3E;
-  }
-
-  <%# ========== 第3层：底部操作栏 ========== %>
-  .bottom-bar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 80px;
-    z-index: 40;
-    pointer-events: none; <%# 让点击穿透 %>
-  }
-
-  .bottom-bar > * {
-    pointer-events: auto; <%# 恢复子元素点击 %>
-  }
-
-  <%# 前往播放页面按钮 %>
-  .go-to-player-btn {
-    position: absolute;
-    bottom: 1.5rem;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
-    background: linear-gradient(135deg, #DC4C3E 0%, #ff6b6b 100%);
-    color: white;
-    border: none;
-    border-radius: 50px;
-    font-size: 0.875rem;
-    font-weight: 500;
-    text-decoration: none;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(220, 76, 62, 0.3);
-  }
-
-  .go-to-player-btn:hover {
-    transform: translateX(-50%) scale(1.05);
-    box-shadow: 0 6px 20px rgba(220, 76, 62, 0.4);
-  }
-
-  .go-to-player-btn:active {
-    transform: translateX(-50%) scale(0.95);
-  }
-
-  .go-to-player-btn svg {
-    flex-shrink: 0;
-  }
-
-  <%# 更多按钮 %>
-  .more-btn {
-    position: absolute;
-    bottom: 1.5rem;
-    right: 1.5rem;
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: white;
-    border: 1px solid #e5e7eb;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    font-size: 1.25rem;
-    color: #6b7280;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .more-btn:hover {
-    transform: scale(1.05);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
-    color: #DC4C3E;
-  }
-
-  .more-btn:active {
-    transform: scale(0.95);
-  }
-
-  <%# 底部弹出菜单 %>
-  .bottom-menu-backdrop {
-    position: fixed;
-    inset: 0;
-    background-color: rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(4px);
-    z-index: 100;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.3s ease, visibility 0.3s;
-    pointer-events: auto;
-  }
-
-  .bottom-menu-backdrop.is-open {
-    opacity: 1;
-    visibility: visible;
-  }
-
-  .bottom-menu-container {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: white;
-    border-radius: 24px 24px 0 0;
-    padding: 1rem 0 2rem;
-    transform: translateY(100%);
-    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 101;
-    max-width: 480px;
-    margin: 0 auto;
-  }
-
-  .bottom-menu-backdrop.is-open .bottom-menu-container {
-    transform: translateY(0);
-  }
-
-  .bottom-menu-handle {
-    width: 40px;
-    height: 4px;
-    background: #e5e7eb;
-    border-radius: 2px;
-    margin: 0 auto 1.5rem;
-  }
-
-  .bottom-menu-nav {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    padding: 0 1.5rem;
-  }
-
-  .bottom-menu-item {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 1rem 1.25rem;
-    border-radius: 12px;
-    text-decoration: none;
-    color: #374151;
-    transition: all 0.2s ease;
-    font-size: 1rem;
-    font-weight: 500;
-  }
-
-  .bottom-menu-item:hover {
-    background: #f9fafb;
-    color: #DC4C3E;
-    transform: translateX(4px);
-  }
-
-  .bottom-menu-item:active {
-    background: #f3f4f6;
-    transform: translateX(4px) scale(0.98);
-  }
-
-  .bottom-menu-item.share-btn {
-    background: none;
-    border: none;
-    width: 100%;
-    text-align: left;
-    cursor: pointer;
-    font-family: inherit;
-  }
-
-  .bottom-menu-icon {
-    font-size: 1.25rem;
-    width: 32px;
-    text-align: center;
-  }
-
-  .bottom-menu-text {
-    font-family: var(--font-sans, "Montserrat", sans-serif);
-  }
-</style>
+      <%#
+         导航到 favorites 页面
+         - turbo-action="advance": 将首页加入历史记录并缓存
+         - action="click->bottom-menu#close": 先关闭菜单，然后正常跳转
+       %>
+      <%= link_to favorites_path, class: "bottom-menu-item", id: "nav-favorites",
+            data: { "turbo-action": "advance", action: "click->bottom-menu#close" } do %>
+        <span class="bottom-menu-icon">❤️</span>
+        <span class="bottom-menu-text">红心列表</span>
+      <% end %>
+    </nav>
+  </div>
+</div>

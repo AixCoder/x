@@ -23,19 +23,18 @@ Rails.application.routes.draw do
   # ============================================
   # 用户认证路由 (登录/登出)
   # ============================================
+  # rails routes | grep session 检测路由
   # 登录页面（显示表单）
   get "login", to: "sessions#new", as: :login
-
-  # 极简登录页面（从播放页面跳转）
-  get "login/simple", to: "sessions#simple", as: :simple_login
-
   # 处理登录表单提交
   post "login", to: "sessions#create"
-
   # 登出
   delete "logout", to: "sessions#destroy", as: :logout
   # 也支持 GET 方式的登出（方便开发测试）
   get "logout", to: "sessions#destroy"
+  # 极简登录页面（从播放页面跳转）
+  get "login/simple", to: "sessions#simple", as: :simple_login
+
 
   # ============================================
   # 用户注册路由

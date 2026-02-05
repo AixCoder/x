@@ -1,13 +1,42 @@
-<%# ============================================
-   登录页面 - Sessions#new
-   ============================================
-   使用 Stimulus 控制器 auth-modal 处理交互
-   表单提交到 POST /login
+<%#
+  ============================================================================
+  独立登录页面 - Sessions#new
+  ============================================================================
+  文件位置: app/views/sessions/new.html.erb
+  控制器: SessionsController#new
+  路由: GET /login
+
+  页面说明:
+  -----------
+  这是一个独立的登录页面（非模态框模式），用于：
+  1. 直接访问 /login 时的登录界面
+  2. 作为模态框的降级方案（当 JavaScript 不可用时）
+  3. 提供完整的登录功能（包含"记住我"选项）
+
+  与模态框的区别:
+  ----------------
+  - 此页面是全屏页面，不是弹出层
+  - 使用相同的 auth-modal Stimulus 控制器处理动画
+  - 表单提交使用独立的 login-form 控制器处理
+  - 包含"返回首页"按钮
+  - 包含可见的"记住我"复选框（模态框中是隐藏字段）
+
+  技术实现:
+  -----------
+  - 复用 _auth_modal.html.erb 中的 CSS 样式
+  - 使用 auth-modal 控制器的小猫动画功能
+  - 表单提交后正常跳转（非 AJAX）
+  ============================================================================
 %>
 
-<%# 登录页面容器 %>
+<%# 登录页面容器 - 绑定 auth-modal 控制器用于小猫动画 %>
 <div class="login-page" data-controller="auth-modal">
-  <%# 返回首页按钮 - 使用 Turbo 无刷新返回 %>
+  <%#
+     返回首页按钮
+     ---------------
+     使用 Turbo 的 restore 动作返回首页
+     aria-label: 无障碍标签
+  %>
   <%= link_to root_path, class: "back-to-home-button", aria: { label: "返回首页" }, data: { turbo_action: "restore" } do %>
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="20" height="20">
       <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
@@ -15,11 +44,18 @@
     返回首页
   <% end %>
 
+  <%# 登录页面容器 - 用于居中和布局 %>
   <div class="login-page-container">
-    <%# 登录卡片 %>
+    <%# 登录卡片 - 复用 auth-card 样式 %>
     <div class="auth-card">
 
-      <%# Cat Animation Header %>
+      <%#
+         小猫动画区域
+         ---------------
+         与模态框使用相同的 SVG 和动画
+         data-auth-modal-target="catWrapper": 绑定控制器以实现动画
+         动画效果：邮箱聚焦时看邮箱，密码聚焦时捂眼睛
+      %>
       <div class="cat-wrapper" data-auth-modal-target="catWrapper">
         <svg width="160" height="120" viewBox="0 0 160 120" style="transform: translateY(8px);">
           <%# Body %>
@@ -46,28 +82,44 @@
         </svg>
       </div>
 
-      <%# Title %>
+      <%# 页面标题 %>
       <div class="auth-title">
         <span data-auth-modal-target="titleText">peter-cat</span>
       </div>
 
-      <%# Flash 消息显示 %>
+      <%#
+         Flash 消息显示
+         ---------------
+         显示控制器设置的 flash 消息
+         - flash[:alert]: 错误消息（如登录失败）
+         - flash[:notice]: 成功消息
+      %>
       <% if flash[:alert] %>
         <div class="flash-message flash-alert">
           <%= flash[:alert] %>
         </div>
       <% end %>
 
-      <%# Form Section %>
+      <%# 表单区域 %>
       <div class="auth-form-body">
-        <%# ============================================
+        <%#
            登录表单
-           ============================================
+           ================
            - url: login_path (POST /login)
-           - data: { turbo: false } 使用 AJAX 提交，成功后 Turbo 返回首页
+           - scope: :session: 参数格式为 session[email], session[password]
+           - data-turbo: false: 禁用 Turbo，使用 login-form 控制器处理提交
+
+           Stimulus 控制器绑定:
+           - controller: "login-form": 使用独立的 login-form 控制器
+           - action: "submit->login-form#submit": 拦截表单提交
         %>
         <%= form_with url: login_path, scope: :session, data: { turbo: false, controller: "login-form", action: "submit->login-form#submit" }, class: "login-form" do |f| %>
-          <%# Email 输入框 %>
+          <%#
+             Email 输入框
+             ---------------
+             value: params.dig(:session, :email): 登录失败时保留已输入的邮箱
+             data-action: 绑定小猫动画（与模态框共用相同的动画逻辑）
+          %>
           <div class="input-group">
             <%= f.email_field :email,
                 id: "auth_email",
@@ -81,7 +133,12 @@
             <%= f.label :email, "邮箱地址", for: "auth_email", class: "input-label" %>
           </div>
 
-          <%# Password 输入框 %>
+          <%#
+             Password 输入框
+             ---------------
+             注意：登录失败时不保留密码（安全考虑）
+             data-action: 小猫捂眼睛动画
+          %>
           <div class="input-group">
             <%= f.password_field :password,
                 id: "auth_password",
@@ -94,17 +151,31 @@
             <%= f.label :password, "密码", for: "auth_password", class: "input-label" %>
           </div>
 
-          <%# 记住我复选框 - iOS Safari 需要明确的过期时间才能保持登录 %>
+          <%#
+             记住我复选框
+             ---------------
+             独立登录页面特有：显示复选框让用户选择
+             （模态框中默认开启，使用 hidden field）
+
+             iOS Safari 注意事项:
+             需要明确的过期时间才能保持登录状态
+             由后端 session_store 配置控制（默认 2 周）
+          %>
           <div class="remember-me-group">
             <%= f.check_box :remember_me, id: "remember_me", class: "remember-checkbox" %>
             <%= f.label :remember_me, "保持登录状态（30天）", for: "remember_me", class: "remember-label" %>
           </div>
 
-          <%# 提交按钮 %>
+          <%# 提交按钮 - 使用中文"登录" %>
           <%= f.submit "登录", class: "auth-submit-btn", data: { auth_modal_target: "submitBtn" } %>
         <% end %>
 
-        <%# 切换模式：还没有账号？去注册 %>
+        <%#
+           切换到注册链接
+           ---------------
+           链接到注册页面 /signup
+           data: { turbo: true }: 使用 Turbo 跳转
+        %>
         <div class="auth-toggle-area">
           <%= link_to "还没有账号？立即注册", signup_path, class: "auth-toggle-link", data: { turbo: true } %>
         </div>
@@ -114,8 +185,17 @@
   </div>
 </div>
 
-<%# Flash 消息样式 %>
+<%#
+   页面专属样式
+   ================
+   这些样式仅在独立登录页使用：
+   1. Flash 消息样式（错误/成功提示）
+   2. 记住我复选框样式
+
+   注意：主要样式（auth-card、input-field 等）来自 _auth_modal.html.erb 中的样式
+%>
 <style>
+  /* Flash 消息基础样式 */
   .flash-message {
     padding: 0.75rem 1rem;
     margin: 0 2rem 1rem;

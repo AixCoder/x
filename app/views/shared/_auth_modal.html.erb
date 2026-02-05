@@ -1,4 +1,9 @@
 <%#
+  ============================================================================
+  Auth Modal Partial - 认证模态框模板
+  ============================================================================
+  文件位置: app/views/shared/_auth_modal.html.erb
+  控制器: AuthModalController (app/javascript/controllers/auth_modal_controller.js)
 
   功能说明:
   -----------
@@ -19,8 +24,14 @@
   - 小猫SVG动画: 根据输入框焦点变化（邮箱聚焦时看邮箱，密码聚焦时捂眼睛）
   - 浮动标签: 输入框获得焦点时标签上浮
   - 错误提示: 显示在表单顶部的红色提示框
-  - Turbo Stream支持: 登录/注册成功后无刷新更新导航栏
+  - AJAX提交: 支持无刷新登录，成功后动态更新导航栏
 
+  使用方法:
+  -----------
+  在父元素中绑定控制器并渲染partial：
+
+      <button data-action="click->auth-modal#open">Join</button>
+      <%= render "shared/auth_modal"
 %>
 
 <style>
@@ -421,42 +432,77 @@
 
 
 
-<%# ==========================================================================
-     文件名: _auth_modal.html.erb
-     位置: app/views/shared/_auth_modal.html.erb
-     用途: 登录/注册模态框模板（ERB + Stimulus + SVG）
-     ========================================================================== %>
+<%# ============================================================================
+     实际使用的模态框结构（上面的注释代码是旧版本备份）
+     ============================================================================ %>
 
-<%# ==========================================================================
-     Stimulus 控制器绑定
-     data-controller="auth-modal" 应该在父元素上定义
-     控制器文件: app/javascript/controllers/auth_modal_controller.js
-     ========================================================================== %>
-<%# app/views/shared/_auth_modal.html.erb %>
+<%#
+   模态框 HTML 结构
+   ================
 
-<%# app/views/shared/_auth_modal.html.erb %>
-<%# 注意：此partial需要在 data-controller="auth-modal" 的父元素内使用 %>
+   1. Modal Backdrop (遮罩层)
+      - 全屏覆盖，半透明背景 + 模糊效果
+      - data-auth-modal-target="backdrop": Stimulus 控制器通过此目标控制显示
+      - 点击可关闭（通过子元素的 data-action）
 
-<%# 1. Modal Backdrop %>
-  <div class="auth-backdrop" data-auth-modal-target="backdrop">
+   2. Modal Card (模态卡片)
+      - 居中显示，最大宽度 380px
+      - 包含关闭按钮、小猫动画、表单
 
-    <%# Click overlay to close %>
-    <div style="position:absolute; inset:0;" data-action="click->auth-modal#close"></div>
+   3. Cat Animation (小猫动画)
+      - SVG 绘制的小猫形象
+      - 根据输入框焦点变化：看邮箱 / 捂眼睛
+      - 通过添加/移除 CSS 类 .cat-looking / .cat-covering 触发动画
 
-    <%# 3. Modal Card %>
-    <div class="auth-card">
+   4. Login/Register Form (登录/注册表单)
+      - 使用 form_with 生成
+      - 支持 AJAX 提交 (data: { turbo: false })
+      - 动态切换提交目标 (login_path / signup_path)
 
-      <%# Close Icon %>
-      <button type="button" class="auth-close-btn" data-action="click->auth-modal#close">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="20" height="20">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-        </svg>
-      </button>
+   Stimulus 绑定说明
+   -----------------
+   - data-controller="auth-modal" 必须在父元素上定义
+   - data-action="click->auth-modal#open"  打开模态框
+   - data-action="click->auth-modal#close" 关闭模态框
+   - data-action="submit->auth-modal#submitForm" 提交表单
+   - data-auth-modal-target="xxx" 控制器访问的 DOM 元素
 
-      <%# Cat Animation Header %>
-      <div class="cat-wrapper" data-auth-modal-target="catWrapper">
-        <svg width="160" height="120" viewBox="0 0 160 120" style="transform: translateY(8px);">
-          <%# Body %>
+   注意：此 partial 必须在 data-controller="auth-modal" 的父元素内使用
+   ============================================================================
+%>
+
+<%# 1. Modal Backdrop - 全屏遮罩层 %>
+<div class="auth-backdrop" data-auth-modal-target="backdrop">
+
+  <%# 点击遮罩层关闭模态框 (透明覆盖层) %>
+  <div style="position:absolute; inset:0;" data-action="click->auth-modal#close"></div>
+
+  <%# 2. Modal Card - 模态框卡片 %>
+  <div class="auth-card">
+
+    <%# 关闭按钮 - 右上角 X 图标 %>
+    <button type="button" class="auth-close-btn" data-action="click->auth-modal#close" aria-label="关闭模态框">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="20" height="20">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+      </svg>
+    </button>
+
+    <%# 3. Cat Animation Header - 小猫动画区域 %>
+    <%#
+       小猫 SVG 动画说明
+       -----------------
+       动画通过 CSS 类控制：
+       - .cat-looking: 小猫看向输入框（邮箱聚焦时）
+       - .cat-covering: 小猫捂眼睛（密码聚焦时）
+
+       SVG 结构：
+       - cat-face-group: 脸部（可移动）
+       - cat-eyes-group: 眼睛（可移动）
+       - cat-paws-group: 爪子（可从下方升起）
+    %>
+    <div class="cat-wrapper" data-auth-modal-target="catWrapper">
+      <svg width="160" height="120" viewBox="0 0 160 120" style="transform: translateY(8px);" aria-hidden="true">
+        <%# 身体轮廓 %>
           <path d="M35,120 C35,100 30,50 50,35 C60,28 70,25 80,25 C90,25 100,28 110,35 C130,50 125,100 125,120" class="cat-line" />
           <path d="M54,36 L45,10 L75,28" class="cat-line" />
           <path d="M106,36 L115,10 L85,28" class="cat-line" />
@@ -480,14 +526,27 @@
         </svg>
       </div>
 
-      <%# Title %>
+      <%# 4. Title - 模态框标题 %>
+      <%# 标题会根据登录/注册模式动态变化："peter-cat" / "join the club" %>
       <div class="auth-title">
         <span data-auth-modal-target="titleText">peter-cat</span>
       </div>
 
-      <%# Form Section %>
+      <%# 5. Form Section - 表单区域 %>
       <div class="auth-form-body">
-        <%# 登录/注册表单 - 根据模式动态切换提交目标 %>
+        <%#
+           登录/注册表单
+           ================
+           特性：
+           1. AJAX 提交 - turbo: false 禁用 Turbo，使用自定义 submitForm 处理
+           2. 动态端点 - 根据模式切换提交到 /login 或 /signup
+           3. 动态参数名 - 登录用 session[xxx]，注册用 user[xxx]
+           4. 浮动标签 - 输入框获得焦点时标签上浮
+
+           Stimulus 绑定：
+           - data-action="submit->auth-modal#submitForm": 拦截提交，AJAX 处理
+           - data-auth-modal-target="form": 控制器访问表单元素
+        %>
         <%= form_with url: login_path, method: :post, class: "auth-form",
               data: { turbo: false, action: "submit->auth-modal#submitForm", auth_modal_target: "form" } do |f| %>
 
@@ -496,41 +555,92 @@
             <span data-auth-modal-target="errorText"></span>
           </div>
 
-          <%# Email %>
+          <%#
+             Email 输入框
+             -----------
+             Stimulus 动画绑定:
+             - focus->auth-modal#focusEmail: 小猫看向邮箱（眼睛向下移动）
+             - blur->auth-modal#blurInput: 重置小猫状态
+
+             动态参数名:
+             - 登录模式: name="session[email]"
+             - 注册模式: name="user[email]" (由 JS updateFormFields 方法动态修改)
+          %>
           <div class="input-group">
-            <%# 使用 name 属性动态切换参数格式：session[email] (登录) 或 user[email] (注册) %>
             <%= f.email_field :email, class: "input-field", placeholder: "Email", required: true,
                   name: "session[email]",
                   data: { action: "focus->auth-modal#focusEmail blur->auth-modal#blurInput", auth_modal_target: "emailField" } %>
             <%= f.label :email, "Email Address", class: "input-label" %>
           </div>
 
-          <%# Password %>
+          <%#
+             Password 输入框
+             ---------------
+             Stimulus 动画绑定:
+             - focus->auth-modal#focusPassword: 小猫捂眼睛（隐私保护动画）
+
+             动态参数名:
+             - 登录模式: name="session[password]"
+             - 注册模式: name="user[password]" (由 JS 动态修改)
+          %>
           <div class="input-group">
-            <%# 使用 name 属性动态切换参数格式：session[password] (登录) 或 user[password] (注册) %>
             <%= f.password_field :password, class: "input-field", placeholder: "Password", required: true,
                   name: "session[password]",
                   data: { action: "focus->auth-modal#focusPassword blur->auth-modal#blurInput", auth_modal_target: "passwordField" } %>
             <%= f.label :password, "Password", class: "input-label" %>
           </div>
 
-          <%# Password Confirmation - 仅在注册模式下显示 %>
+          <%#
+             Password Confirmation - 密码确认
+             --------------------------------
+             仅在注册模式下显示（通过 CSS 类 .is-visible 控制显示/隐藏）
+
+             显示/隐藏机制:
+             - 初始状态: height: 0, opacity: 0, overflow: hidden (完全隐藏)
+             - 显示状态: 添加 .is-visible 类，height 动画展开到 3.5rem
+
+             参数格式: name="user[password_confirmation]"
+          %>
           <div class="input-group password-confirm-group" data-auth-modal-target="passwordConfirmGroup">
-            <%# 注册模式下参数格式为 user[password_confirmation] %>
             <%= f.password_field :password_confirmation, class: "input-field", placeholder: "Confirm Password",
                   name: "user[password_confirmation]",
                   data: { action: "focus->auth-modal#focusPassword blur->auth-modal#blurInput", auth_modal_target: "passwordConfirmField" } %>
             <%= f.label :password_confirmation, "Confirm Password", class: "input-label" %>
           </div>
 
-          <%# Remember Me - 默认记住用户30天 %>
+          <%#
+             Remember Me - 记住我
+             ----------------------
+             使用隐藏的 input 字段，默认开启记住登录状态
+             有效期由后端 session_store 配置决定（默认 2 周）
+             可在独立登录页面改为可见的复选框
+          %>
           <input type="hidden" name="session[remember_me]" value="1">
 
-          <%# Submit Button %>
+          <%#
+             Submit Button - 提交按钮
+             ------------------------
+             按钮文字根据模式动态变化：
+             - 登录模式: "Enter"
+             - 注册模式: "Join" (由 JS updateTexts 方法修改)
+          %>
           <%= f.submit "Enter", class: "auth-submit-btn", data: { auth_modal_target: "submitBtn" } %>
         <% end %>
 
-        <%# Toggle Mode %>
+        <%#
+           Toggle Mode - 切换登录/注册模式
+           -----------------------------
+           点击后在登录和注册模式之间切换
+           Stimulus 绑定: click->auth-modal#toggleMode
+
+           切换时更新：
+           - 标题文字 (peter-cat / join the club)
+           - 提交按钮文字 (Enter / Join)
+           - 本按钮文字 (Not a member? Join / Already a member? Enter)
+           - 密码确认字段的显示/隐藏
+           - 表单提交目标 (/login / /signup)
+           - 参数名前缀 (session[xxx] / user[xxx])
+        %>
         <button type="button" class="auth-toggle-link"
                 data-action="click->auth-modal#toggleMode"
                 data-auth-modal-target="toggleBtn">

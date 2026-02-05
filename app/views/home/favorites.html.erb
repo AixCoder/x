@@ -1,6 +1,14 @@
-<%# 红心列表页面 %>
+<%#
+  红心列表页面 - 用户收藏的名言列表
+  ============================================
+  导航说明:
+  - 返回按钮使用 turbo_action: "restore" 从 Turbo 缓存恢复首页
+  - 确保首页状态（如播放状态）不被重置
+  - 未登录用户显示登录提示
+  ============================================
+%>
 <div class="favorites-container" data-controller="favorites-list">
-  <%= link_to "← 返回", root_path, class: "back-link", data: { turbo_action: "restore" } %>
+  <%= link_to "← 返回", root_path, class: "back-link", data: { "turbo-action": "restore" } %>
 
   <h1 class="favorites-title">红心列表 ❤️</h1>
 

@@ -1,6 +1,13 @@
-<%# about 页面 %>
+<%#
+  About 页面 - 关于应用信息
+  ============================================
+  导航说明：
+  - 返回按钮使用 turbo_action: "restore" 从 Turbo 缓存恢复首页
+  - 确保首页状态（如播放状态）不被重置
+  ============================================
+%>
 <div class="about-container">
-  <%= link_to "← 返回", root_path, class: "back-link", data: { turbo_action: "restore" } %>
+  <%= link_to "← 返回", root_path, class: "back-link", data: { "turbo-action": "restore" } %>
 
   <h1 class="about-title">About</h1>
 
